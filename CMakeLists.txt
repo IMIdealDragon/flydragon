@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(flydragon C CXX)
 
+add_compile_options(-std=c++11)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
@@ -48,11 +50,13 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 include_directories(${Boost_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/_include)
+MESSAGE(${PROJECT_SOURCE_DIR}/_include)
+MESSAGE(${CXX_FLAGS})
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 
 add_subdirectory(app)
-add_subdirectory(_include)
 add_subdirectory(misc)
 add_subdirectory(proc)
 add_subdirectory(signal)

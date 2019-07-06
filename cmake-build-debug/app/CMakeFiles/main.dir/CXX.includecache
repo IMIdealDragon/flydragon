@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../_include/flyd_global.h
+
+/home/ideal2/Desktop/flydragon/app/config.h
+vector
+-
+memory
+-
+flyd_global.h
+/home/ideal2/Desktop/flydragon/app/flyd_global.h
+
+/home/ideal2/Desktop/flydragon/app/main.cc
+iostream
+-
+config.h
+/home/ideal2/Desktop/flydragon/app/config.h
+

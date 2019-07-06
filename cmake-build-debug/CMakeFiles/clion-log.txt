@@ -1,0 +1,6 @@
+/home/ideal2/Downloads/clion-2019.1.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ideal2/Desktop/flydragon
+/home/ideal2/Desktop/flydragon/_include
+-g-DCHECK_PTHREAD_RETURN_VALUE-D_FILE_OFFSET_BITS=64-Wall-Wextra-Werror-Wconversion-Wno-unused-parameter-Wold-style-cast-Woverloaded-virtual-Wpointer-arith-Wshadow-Wwrite-strings-march=native-std=c++11-rdynamic
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/ideal2/Desktop/flydragon/cmake-build-debug

@@ -5,3 +5,4 @@ cmake-build-debug/
 *.vscode
 tags
 开发日记/
+build/

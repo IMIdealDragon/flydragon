@@ -3,7 +3,7 @@
 //Author: Ideal Dragon
 
 #include <iostream>
-#include <flyd_func.h>
+#include "flyd_func.h"
 #include "config.h"
 
 using namespace flyd;

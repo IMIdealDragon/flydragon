@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
+#include <string>
 
 #include "flyd_global.h"
 //本项目的命名空间是flymd
@@ -40,7 +42,10 @@ namespace flyd{
 
     public:
         typedef std::vector<std::shared_ptr<CConfItem>> ConfigitemVector;
+        typedef std::unordered_map<std::string, std::string>  ConfigitemMap;
+
         ConfigitemVector  config_vector_;
+        ConfigitemMap config_map_;
     };
 
 }

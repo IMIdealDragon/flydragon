@@ -125,6 +125,60 @@ main/fast:
 	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+config.o: config.cc.o
+
+.PHONY : config.o
+
+# target to build an object file
+config.cc.o:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/config.cc.o
+.PHONY : config.cc.o
+
+config.i: config.cc.i
+
+.PHONY : config.i
+
+# target to preprocess a source file
+config.cc.i:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/config.cc.i
+.PHONY : config.cc.i
+
+config.s: config.cc.s
+
+.PHONY : config.s
+
+# target to generate assembly for a file
+config.cc.s:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/config.cc.s
+.PHONY : config.cc.s
+
+flyd_string.o: flyd_string.cc.o
+
+.PHONY : flyd_string.o
+
+# target to build an object file
+flyd_string.cc.o:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/flyd_string.cc.o
+.PHONY : flyd_string.cc.o
+
+flyd_string.i: flyd_string.cc.i
+
+.PHONY : flyd_string.i
+
+# target to preprocess a source file
+flyd_string.cc.i:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/flyd_string.cc.i
+.PHONY : flyd_string.cc.i
+
+flyd_string.s: flyd_string.cc.s
+
+.PHONY : flyd_string.s
+
+# target to generate assembly for a file
+flyd_string.cc.s:
+	cd /home/ideal2/Desktop/flydragon/cmake-build-debug && $(MAKE) -f app/CMakeFiles/main.dir/build.make app/CMakeFiles/main.dir/flyd_string.cc.s
+.PHONY : flyd_string.cc.s
+
 main.o: main.cc.o
 
 .PHONY : main.o
@@ -161,6 +215,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... main"
 	@echo "... edit_cache"
+	@echo "... config.o"
+	@echo "... config.i"
+	@echo "... config.s"
+	@echo "... flyd_string.o"
+	@echo "... flyd_string.i"
+	@echo "... flyd_string.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

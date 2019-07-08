@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/main.cc.o"
+  "CMakeFiles/main.dir/config.cc.o"
+  "CMakeFiles/main.dir/flyd_string.cc.o"
   "../bin/main.pdb"
   "../bin/main"
 )

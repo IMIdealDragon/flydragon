@@ -11,7 +11,7 @@
 #include "flyd_global.h"
 //本项目的命名空间是flymd
 //类名的命名规范是每个单词首字母大写
-//该Config类读取config文件 采用线程安全的单例模式
+//该Config类读取config文件 采用meyers singleton,简单有效
 
 namespace flyd{
 
@@ -21,18 +21,17 @@ namespace flyd{
 
     private:
         Config();
+    public:
         ~Config();
 
     public://静态成员函数不区分对象 类成员属于类本身，可通过类名访问
-        static Config* GetInstance()
+        static Config& GetInstance()
         {
-            pthread_once(&ponce_, &Config::init());
+            static Config value_;
+
+            return value_;
         }
 
-        static void init()
-        {
-            std::shared_ptr<int> a;
-        }
 
     public:
         bool Load(const char *pconfName);//装载配置文件
@@ -41,11 +40,8 @@ namespace flyd{
 
     public:
         std::vector<LPCConfItem> config_list_;
-        static pthread_once_t ponce_;
     };
 
-
-    pthread_once_t Config::ponce_ = PTHREAD_ONCE_INIT;//定义变量
 }
 
 

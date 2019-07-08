@@ -88,6 +88,15 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/ideal2/Desktop/flydragon/app/config.cc">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="/home/ideal2/Desktop/flydragon/app/config.h">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="/home/ideal2/Desktop/flydragon/app/flyd_string.cc">
+			<Option target="main"/>
+		</Unit>
 		<Unit filename="/home/ideal2/Desktop/flydragon/app/main.cc">
 			<Option target="main"/>
 		</Unit>

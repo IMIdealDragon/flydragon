@@ -10,6 +10,8 @@ CXX=${CXX:-g++}
 
 ln -sf $BUILD_DIR/$BUILD_TYPE-cpp11/compile_commands.json
 
+cp ${SOURCE_DIR}/flyd.conf $BUILD_DIR/$BUILD_TYPE-cpp11/flyd.conf
+
 mkdir -p $BUILD_DIR/$BUILD_TYPE-cpp11 \
   && cd $BUILD_DIR/$BUILD_TYPE-cpp11 \
   && cmake \

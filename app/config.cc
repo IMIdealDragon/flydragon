@@ -16,15 +16,9 @@ Config::Config() {
 //析构函数
 //vector<B*>指针是需要析构的，如果vector<B>则不需要
 Config::~Config() {
-//    std::vector<LPCConfItem >::iterator pos;
-//    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)//++pos比pos++快
-//    {
-//        delete (*pos);
-//    }
-//    config_list_.clear();
+
 }
-//
-//
+
 //装载配置文件
 bool Config::Load(const char *pconfName)
 {
@@ -92,14 +86,6 @@ bool Config::Load(const char *pconfName)
 
 //根据ItemName获取配置信息字符串，不会有修改操作，不用互斥
 const char *Config::GetString(const char *p_itemname) {
-//    std::vector<LPCConfItem >::iterator pos;
-//    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)
-//    {
-//        if(strcasecmp( (*pos)->ItemName, p_itemname) == 0)
-//            return (*pos)->ItemContent;
-//    }//end for
-
-
     for(auto pos : config_vector_)
     {
         if(strcasecmp( (*pos).ItemName, p_itemname) == 0)

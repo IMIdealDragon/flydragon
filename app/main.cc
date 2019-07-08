@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
      //读取配置文件
     Config &conf =  Config::GetInstance();
-    if(conf.Load("../flyd.conf") == false)
+    if(!conf.Load("../flyd.conf"))
     {
         printf("配置文件读取失败，退出！\n");
         exit(1);

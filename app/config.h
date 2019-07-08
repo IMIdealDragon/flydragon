@@ -40,7 +40,6 @@ namespace flyd{
 
     public:
         typedef std::vector<std::shared_ptr<CConfItem>> ConfigitemVector;
- //       std::vector<LPCConfItem> config_list_;//被优化了 用了智能指针
         ConfigitemVector  config_vector_;
     };
 

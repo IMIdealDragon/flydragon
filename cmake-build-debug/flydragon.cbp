@@ -44,8 +44,8 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/ideal2/Desktop/flydragon"/>
 					<Add directory="/home/ideal2/Desktop/flydragon/_include"/>
+					<Add directory="/home/ideal2/Desktop/flydragon"/>
 					<Add directory="/usr/include/c++/5"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
 					<Add directory="/usr/include/c++/5/backward"/>
@@ -69,8 +69,8 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/ideal2/Desktop/flydragon"/>
 					<Add directory="/home/ideal2/Desktop/flydragon/_include"/>
+					<Add directory="/home/ideal2/Desktop/flydragon"/>
 					<Add directory="/usr/include/c++/5"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/5"/>
 					<Add directory="/usr/include/c++/5/backward"/>

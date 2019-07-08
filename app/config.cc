@@ -16,12 +16,12 @@ Config::Config() {
 //析构函数
 //vector<B*>指针是需要析构的，如果vector<B>则不需要
 Config::~Config() {
-    std::vector<LPCConfItem >::iterator pos;
-    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)//++pos比pos++快
-    {
-        delete (*pos);
-    }
-    config_list_.clear();
+//    std::vector<LPCConfItem >::iterator pos;
+//    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)//++pos比pos++快
+//    {
+//        delete (*pos);
+//    }
+//    config_list_.clear();
 }
 //
 //
@@ -69,8 +69,8 @@ bool Config::Load(const char *pconfName)
         char *ptmp = strchr(linebuf, '=');
         if(ptmp != NULL)
         {
-            LPCConfItem confitem = new CConfItem;
-            memset(confitem, 0, sizeof(CConfItem));
+            std::shared_ptr<CConfItem> confitem(new CConfItem);
+            memset(confitem.get(), 0, sizeof(CConfItem));
             //等号左侧拷贝到confitem->ItemName
             strncpy(confitem->ItemName, linebuf, (int)(ptmp - linebuf));
             strcpy(confitem->ItemContent, ptmp + 1);
@@ -81,7 +81,8 @@ bool Config::Load(const char *pconfName)
             Rtrim(confitem->ItemContent);
             Ltrim(confitem->ItemContent);
 
-            config_list_.push_back(confitem);//要释放内存，因为这里是new出来的
+            config_vector_.push_back(confitem);
+
         }
     }  //end while(!feof(fp))
     ::fclose(fp);
@@ -91,12 +92,19 @@ bool Config::Load(const char *pconfName)
 
 //根据ItemName获取配置信息字符串，不会有修改操作，不用互斥
 const char *Config::GetString(const char *p_itemname) {
-    std::vector<LPCConfItem >::iterator pos;
-    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)
+//    std::vector<LPCConfItem >::iterator pos;
+//    for(pos = config_list_.begin(); pos != config_list_.end(); ++pos)
+//    {
+//        if(strcasecmp( (*pos)->ItemName, p_itemname) == 0)
+//            return (*pos)->ItemContent;
+//    }//end for
+
+
+    for(auto pos : config_vector_)
     {
-        if(strcasecmp( (*pos)->ItemName, p_itemname) == 0)
-            return (*pos)->ItemContent;
-    }//end for
+        if(strcasecmp( (*pos).ItemName, p_itemname) == 0)
+            return (*pos).ItemContent;
+    }
 
     return NULL;
 }

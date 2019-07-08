@@ -8,6 +8,7 @@ app/CMakeFiles/main.dir/config.cc.o: ../app/config.h
 
 app/CMakeFiles/main.dir/flyd_string.cc.o: ../app/flyd_string.cc
 
+app/CMakeFiles/main.dir/main.cc.o: ../_include/flyd_func.h
 app/CMakeFiles/main.dir/main.cc.o: ../_include/flyd_global.h
 app/CMakeFiles/main.dir/main.cc.o: ../app/config.h
 app/CMakeFiles/main.dir/main.cc.o: ../app/main.cc

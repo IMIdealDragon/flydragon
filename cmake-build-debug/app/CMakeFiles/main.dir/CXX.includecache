@@ -6,7 +6,19 @@
 
 #IncludeRegexTransform: 
 
+../_include/flyd_func.h
+
 ../_include/flyd_global.h
+
+../_include/flyd_string.h
+
+/home/ideal2/Desktop/flydragon/app/config.cc
+cstring
+-
+config.h
+/home/ideal2/Desktop/flydragon/app/config.h
+flyd_string.h
+/home/ideal2/Desktop/flydragon/app/flyd_string.h
 
 /home/ideal2/Desktop/flydragon/app/config.h
 vector
@@ -20,6 +32,8 @@ flyd_global.h
 iostream
 -
 csapp.h
+-
+flyd_func.h
 -
 config.h
 /home/ideal2/Desktop/flydragon/app/config.h

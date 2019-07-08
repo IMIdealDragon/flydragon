@@ -9,6 +9,7 @@ app/CMakeFiles/main.dir/config.cc.o
 app/CMakeFiles/main.dir/flyd_string.cc.o
  /home/ideal2/Desktop/flydragon/app/flyd_string.cc
 app/CMakeFiles/main.dir/main.cc.o
+ ../_include/flyd_func.h
  ../_include/flyd_global.h
  /home/ideal2/Desktop/flydragon/app/config.h
  /home/ideal2/Desktop/flydragon/app/main.cc

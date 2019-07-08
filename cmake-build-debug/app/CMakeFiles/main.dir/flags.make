@@ -6,5 +6,5 @@ CXX_FLAGS = -O0   -std=c++11
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/ideal2/Desktop/flydragon -I/home/ideal2/Desktop/flydragon/_include 
+CXX_INCLUDES = -I/home/ideal2/Desktop/flydragon/_include -I/home/ideal2/Desktop/flydragon 
 

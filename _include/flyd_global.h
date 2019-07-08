@@ -11,6 +11,15 @@ typedef struct g_ConfItem
     char ItemName[50];
     char ItemContent[500];
 }CConfItem,*LPCConfItem;  //typedef struct 和c语言中不一样，
+//#define ENVMOVE
+
+#ifdef ENVMOVE
+extern size_t        g_argvneedmem;
+extern size_t        g_envneedmem;
+extern int           g_os_argc;
+extern char          **g_os_argv;
+extern char          *gp_envmem;
+#endif
 
 
 #endif //FLYDRAGON_FLYD_GLOBAL_H

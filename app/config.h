@@ -11,7 +11,7 @@
 #include <string>
 
 #include "flyd_global.h"
-//本项目的命名空间是flymd
+//本项目的命名空间是flyd
 //类名的命名规范是每个单词首字母大写
 //该Config类读取config文件 采用meyers singleton,简单有效
 

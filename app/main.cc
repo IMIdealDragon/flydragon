@@ -30,6 +30,10 @@ int main(int argc, char **argv)
     {
         printf("DBInfo = %s\n", pDBInfo);
     }
+    else
+    {
+        printf("DBInfo get failed\n");
+    }
 
 
 

@@ -6,7 +6,6 @@
 
 #ifndef FLYDRAGON_FLYD_STRING_H
 #define FLYDRAGON_FLYD_STRING_H
-void Rtrim(char *string);
-void Ltrim(char *string);
+
 
 #endif //FLYDRAGON_FLYD_STRING_H

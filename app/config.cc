@@ -5,6 +5,8 @@
 #include <cstring>
 #include "config.h"
 #include "flyd_string.h"
+#include <iostream>
+#include "flyd_func.h"
 
 using namespace flyd;
 
@@ -44,39 +46,23 @@ bool Config::Load(const char *pconfName)
         || *linebuf == '#' || *linebuf == '\t' || *linebuf == '\n')
             continue;
 
-        //如果行尾有换行 回车 空格等都截取掉
-        uint16_t end = strlen(linebuf) - 1;
-        while(linebuf[end] == 10
-              || linebuf[end] == 13
-              || linebuf[end] == 32)
-        {
-            linebuf[end] = 0;
-            end--;
-        }
-
         if(linebuf[0] == 0)
             continue;
         if(*linebuf == '[')
             continue;
 
         //开始处理实际有效的配置文件
-        char *ptmp = strchr(linebuf, '=');
+        char *ptmp = strchr(linebuf, '=');//获得“=”的地址
         if(ptmp != NULL)
         {
-            std::shared_ptr<CConfItem> confitem(new CConfItem);
-            memset(confitem.get(), 0, sizeof(CConfItem));
-            //等号左侧拷贝到confitem->ItemName
-            strncpy(confitem->ItemName, linebuf, (int)(ptmp - linebuf));
-            strcpy(confitem->ItemContent, ptmp + 1);
+            std::string item_name, item_content;
 
-           //截取字符串首尾的空格
-            Rtrim(confitem->ItemName);
-            Ltrim(confitem->ItemName);
-            Rtrim(confitem->ItemContent);
-            Ltrim(confitem->ItemContent);
+            item_name.append(linebuf, (int)(ptmp - linebuf));
+            item_content.append(ptmp + 1);
+            item_name = Trim(item_name);
+            item_content = Trim(item_content);
 
-            config_vector_.push_back(confitem);
-
+            config_map_.insert({item_name, item_content});
         }
     }  //end while(!feof(fp))
     ::fclose(fp);
@@ -84,15 +70,18 @@ bool Config::Load(const char *pconfName)
 } //end Load
 
 
+bool StringCompare(std::string& a, std::string& b)
+{
+    return a == b;
+}
 //根据ItemName获取配置信息字符串，不会有修改操作，不用互斥
+//修改为unordered_map存储，无序插入和删除操作效率较高
 const char *Config::GetString(const char *p_itemname) {
-    for(auto pos : config_vector_)
-    {
-        if(strcasecmp( (*pos).ItemName, p_itemname) == 0)
-            return (*pos).ItemContent;
-    }
-
-    return NULL;
+    auto iter = config_map_.find(p_itemname);
+    if (iter != config_map_.end())
+        return (*iter).second.c_str();
+    else
+        return NULL;
 }
 
 //根据ItemName获取数字类型配置信息，不会有修改操作，不用互斥

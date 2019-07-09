@@ -10,6 +10,10 @@
 void flyd_init_setproctitle();
 void flyd_setproctitle(const char *title);
 
+std::string &Ltrim(std::string &s);
+std::string &Rtrim(std::string &s);
+std::string &Trim(std::string &s);
+
 
 
 #endif //FLYDRAGON_FLYD_FUNC_H

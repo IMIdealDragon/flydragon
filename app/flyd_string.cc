@@ -5,49 +5,29 @@
 
 
 #include <stdio.h>
+#include <string>
 #include <string.h>
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
 
-//截取字符串尾部空格
-void Rtrim(char *string)
-{
-    size_t len = 0;
-    if(string == NULL)
-        return;
-
-    len = strlen(string);
-    while(len > 0 && string[len-1] == ' ')   //位置换一下
-        string[--len] = 0;
-
+//一行代码不超过80个字符
+// trim from start
+std::string &Ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                    std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
 }
 
-//截取字符串首部空格
-void Ltrim(char *string)
-{
-    size_t len = 0;
-    len = strlen(string);
-    char *p_tmp = string;
-    if( (*p_tmp) != ' ') //不是以空格开头
-        return;
-    //找第一个不为空格的
-    while((*p_tmp) != '\0')
-    {
-        if( (*p_tmp) == ' ')
-            p_tmp++;
-        else
-            break;
-    }
-    if((*p_tmp) == '\0') //全是空格
-    {
-        *string = '\0';
-        return;
-    }
-    char *p_tmp2 = string;
-    while((*p_tmp) != '\0')
-    {
-        (*p_tmp2) = (*p_tmp);
-        p_tmp++;
-        p_tmp2++;
-    }
-    (*p_tmp2) = '\0';
+// trim from end
+std::string &Rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
 
+// trim from both ends
+std::string &Trim(std::string &s) {
+    return Ltrim(Rtrim(s));
 }

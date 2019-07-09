@@ -5,6 +5,13 @@ project(flydragon C CXX)
 add_compile_options(-std=c++11)
 include_directories(${PROJECT_SOURCE_DIR}/_include)
 
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+  MESSAGE(STATUS "current platform: Windows")
+  include_directories("D:\\linux_shared\\include")
+  include_directories("D:\\linux_shared\\include\\x86_64-linux-gnu")
+  include_directories("D:\\linux_shared\\include\\x86_64-linux-gnu\\sys")
+endif ()
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()

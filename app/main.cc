@@ -5,6 +5,7 @@
 #include <iostream>
 #include "flyd_func.h"
 #include "config.h"
+#include "logging/Logging.h"
 
 
 
@@ -29,6 +30,7 @@ int main(int argc, char **argv)
     if(pDBInfo != NULL)
     {
         printf("DBInfo = %s\n", pDBInfo);
+        LOG_INFO << "DBInfo = " << pDBInfo ;
     }
     else
     {

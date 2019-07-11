@@ -7,6 +7,7 @@ include_directories(${PROJECT_SOURCE_DIR}/_include)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   MESSAGE(STATUS "current platform: Windows")
+  include_directories("F:\\usr\\local\\include\\boost-1_70")
   include_directories("D:\\linux_shared\\include")
   include_directories("D:\\linux_shared\\include\\x86_64-linux-gnu")
   include_directories("D:\\linux_shared\\include\\x86_64-linux-gnu\\sys")
@@ -71,6 +72,7 @@ add_subdirectory(misc)
 add_subdirectory(proc)
 add_subdirectory(signal)
 add_subdirectory(net)
+add_subdirectory(logging)
 
 
 

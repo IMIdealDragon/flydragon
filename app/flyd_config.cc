@@ -3,7 +3,7 @@
 //Author: Ideal Dragon
 
 #include <cstring>
-#include "config.h"
+#include "flyd_config.h"
 #include "flyd_string.h"
 #include <iostream>
 #include "flyd_func.h"
@@ -11,27 +11,16 @@
 using namespace flyd;
 
 
-//构造函数
-Config::Config() {
-
-}
-//析构函数
-//vector<B*>指针是需要析构的，如果vector<B>则不需要
-Config::~Config() {
-
-}
-
 //装载配置文件
 bool Config::Load(const char *pconfName)
 {
     FILE *fp;
     fp = fopen(pconfName, "r");
-    if(fp == NULL)
+    if(fp == NULL) {
         return false;
-
+    }
     //每一行配置文件读出来都放在这里
     char linebuf[501];//每行配置都不要太长，保持<500字符
-
     //文件成功打开
     while(!feof(fp)) //检查文件是否结束
     {

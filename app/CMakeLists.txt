@@ -15,8 +15,9 @@ set(BASE_SRC
         ../logging/ThreadPool.cc)
 set(MAIN_SRC
         main.cc
-        config.cc
+        flyd_config.cc
         flyd_string.cc
+        ../signal/flyd_signal.cc
         )
 add_executable(main ${MAIN_SRC} ${BASE_SRC}) 
 target_link_libraries(main pthread rt)

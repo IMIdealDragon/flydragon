@@ -1,33 +1,38 @@
-/*
- * @Copyright(C): Ideal Dragon. All rights reserved. 
- * @lisence: GPL
- * @Author: Ideal Dragon
- * @Date: 2019-07-12 16:35:17
- * @Description: 
- */
-
-
-#include <signal.h>
-#include <stdlib.h>
-#include <errno.h>
+#ifndef FLY_SIGNAL
+#define FLY_SIGNAL
 #include <unordered_map>
+#include <signal.h>
 #include <functional>
-#include <siginfo.h>
 
 namespace flyd{
+ class Signal{
+  public:
+     Signal(){};
+     ~Signal(){};
 
-typedef std::function<void(int signo, siginfo_t *siginfo, void *ucontext)> SignalHandler
+  public://静态成员函数不区分对象 类成员属于类本身，可通过类名访问
+//        static Signal& GetInstance()
+//        {
+//            static Signal value_;
+//
+//            return value_;
+//        }
 
-class Signal() {
-public:
-    Singal();
-    ~Signal(){ }
-    Signal_Add(int signo,SignalHandler Handler);
-    
-    
-private:
-    std::unordered_map<int, SignalHandler> signals_;
+        static void SignalHandler(int signo, siginfo_t *siginfo, void *ucontext)
+        {
+            printf("signo == %d\n", signo);
+        }
+  public:
+        typedef  void(*SigFunction)(int,siginfo_t *, void*);
+        void Init();
+        void AddSingal(int signo, SigFunction sighandler);
 
+  public:
+
+        typedef std::unordered_map<int, SigFunction>  SignalMap;
+        SignalMap signals_;
     };
 
 }
+
+#endif

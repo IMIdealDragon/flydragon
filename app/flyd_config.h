@@ -2,8 +2,8 @@
 //Use if this source code is governed by GPL-style license
 //Author: Ideal Dragon
 
-#ifndef FLYDRAGON_CONFIG_H
-#define FLYDRAGON_CONFIG_H
+#ifndef FLYDRAGON_FLYD_CONFIG_H
+#define FLYDRAGON_FLYD_CONFIG_H
 
 #include <vector>
 #include <memory>
@@ -16,23 +16,18 @@
 //该Config类读取config文件 采用meyers singleton,简单有效
 
 namespace flyd{
-
-
-
     class Config{
-
-    private:
-        Config();
     public:
-        ~Config();
+        Config(){};
+        ~Config(){};
 
-    public://静态成员函数不区分对象 类成员属于类本身，可通过类名访问
-        static Config& GetInstance()
-        {
-            static Config value_;
-
-            return value_;
-        }
+//    public://静态成员函数不区分对象 类成员属于类本身，可通过类名访问
+//        static Config& GetInstance()
+//        {
+//            static Config value_;
+//
+//            return value_;
+//        }
 
 
     public:
@@ -41,10 +36,7 @@ namespace flyd{
         int GetIntDefault(const char *p_itemname, const int def);
 
     public:
-        typedef std::vector<std::shared_ptr<CConfItem>> ConfigitemVector;
         typedef std::unordered_map<std::string, std::string>  ConfigitemMap;
-
-        ConfigitemVector  config_vector_;
         ConfigitemMap config_map_;
     };
 
@@ -52,4 +44,4 @@ namespace flyd{
 
 
 
-#endif //FLYDRAGON_CONFIG_H
+#endif //FLYDRAGON_FLYD_CONFIG_H

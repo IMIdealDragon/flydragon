@@ -18,6 +18,7 @@ set(MAIN_SRC
         flyd_config.cc
         flyd_string.cc
         ../signal/flyd_signal.cc
+        ../proc/flyd_process.cc
         )
-add_executable(main ${MAIN_SRC} ${BASE_SRC}) 
-target_link_libraries(main pthread rt)
+add_executable(flydragonxxxxx ${MAIN_SRC} ${BASE_SRC})
+target_link_libraries(flydragonxxxxx pthread rt)

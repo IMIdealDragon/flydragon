@@ -8,10 +8,11 @@
 #include "logging/Logging.h"
 #include "signal/flyd_signal.h"
 #include "flyd_singleton.h"
-
-
+#include "proc/flyd_process.h"
 
 using namespace flyd;
+
+pid_t flyd_pid, flyd_parent;
     
 
 int main(int argc, char **argv)
@@ -42,6 +43,20 @@ int main(int argc, char **argv)
         printf("DBInfo get failed\n");
     }
 
+    flyd_pid = getpid();      //取得进程pid
+    flyd_parent = getppid();     //取得父进程的id
+    printf("主进程pid = %d, ppid = %d\n", flyd_pid, flyd_parent);
+
+    int cdaemonresult = flyd_daemon();
+    if(cdaemonresult == -1) //fork()失败
+        printf("cdaemonresult:master进程创建失败\n");
+    if(cdaemonresult == 1)
+    {
+        printf("这是原始的父进程，退出\n");
+        exit(0);
+    }
+
+    flyd_master_process_cycle();
 
 
     std::cout << "exit successfully \n" << std::endl;

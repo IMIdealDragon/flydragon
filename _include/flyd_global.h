@@ -5,6 +5,8 @@
 #ifndef FLYDRAGON_FLYD_GLOBAL_H
 #define FLYDRAGON_FLYD_GLOBAL_H
 
+extern FILE* g_filep;
+
 //定义类型别名CConfItem 类型指针，而c语言中是跟的对象名称
 typedef struct g_ConfItem
 {

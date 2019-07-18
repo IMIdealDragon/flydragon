@@ -13,10 +13,28 @@
 using namespace flyd;
 
 pid_t flyd_pid, flyd_parent;
-    
+
+FILE* g_filep;
+void dummyOutput(const char* msg, int len)
+{
+    if (g_filep)
+    {
+        fwrite(msg, 1, len, g_filep);
+    }
+}
+void dummyFlush()
+{
+    fflush(g_filep);
+}
 
 int main(int argc, char **argv)
 {
+
+    g_filep = ::fopen("../flyd_log", "ae");
+    if(!g_filep)
+        printf("打开失败\n");
+    muduo::Logger::setOutput(dummyOutput);
+    muduo::Logger::setFlush(dummyFlush);
 
     //初始化信号
     Singleton<Signal>::getInstance().Init();
@@ -46,6 +64,7 @@ int main(int argc, char **argv)
     flyd_pid = getpid();      //取得进程pid
     flyd_parent = getppid();     //取得父进程的id
     printf("主进程pid = %d, ppid = %d\n", flyd_pid, flyd_parent);
+    LOG_INFO << "THIS IS MAIN" ;
 
     int cdaemonresult = flyd_daemon();
     if(cdaemonresult == -1) //fork()失败
@@ -56,11 +75,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    LOG_INFO << "master exit successfully \n " ;
+
     flyd_master_process_cycle();
 
-
     std::cout << "exit successfully \n" << std::endl;
-
+    LOG_INFO << "exit successfully \n " ;
 
     return 0;
 }

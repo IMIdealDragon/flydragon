@@ -15,5 +15,10 @@ std::string &Rtrim(std::string &s);
 std::string &Trim(std::string &s);
 
 
+//日志文件输出函数
+void dummyOutput(const char* msg, int len);
+void dummyFlush();
+
+
 
 #endif //FLYDRAGON_FLYD_FUNC_H

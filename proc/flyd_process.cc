@@ -27,7 +27,6 @@ namespace flyd {
 
         //2.fork子进程作为守护进程
         int flag;
-        LOG_INFO << "THIS IS MASTER\n ";
         flag = fork();
         switch (flag)  //fork()出来这个子进程才会成为咱们这里讲解的master进程；
         {
@@ -52,10 +51,8 @@ namespace flyd {
             printf("flyd_daemon()中setsid()失败!\n");
             return -1;
         }
-        LOG_INFO << "THIS IS MASTER PROCESS too";
 
         //4.更改文件目录为根文件目录
-       LOG_INFO << "THIS IS MASTER ";
         //5.关闭用不到的文件描述符
         int i = 0;
         if (i > STDERR_FILENO)  //fd应该是3，这个应该成立
@@ -67,22 +64,22 @@ namespace flyd {
             }
         }
 
-//        //6.重定向标准输入输出
-//        int fd = open("/dev/null", O_RDWR);
-//        if (fd == -1) {
-//            printf("ngx_daemon()中open(\"/dev/null\")失败!\n");
-//            return -1;
-//        }
-//        if (dup2(fd, STDIN_FILENO) == -1) //先关闭STDIN_FILENO[这是规矩，已经打开的描述符，动他之前，先close]，类似于指针指向null，让/dev/null成为标准输入；
-//        {
-//            printf("ngx_daemon()中dup2(STDIN)失败!\n");
-//            return -1;
-//        }
-//        if (dup2(fd, STDOUT_FILENO) == -1) //再关闭STDIN_FILENO，类似于指针指向null，让/dev/null成为标准输出；
-//        {
-//            printf("ngx_daemon()中dup2(STDOUT)失败!\n");
-//            return -1;
-//        }
+        //6.重定向标准输入输出
+        int fd = open("/dev/null", O_RDWR);
+        if (fd == -1) {
+            printf("ngx_daemon()中open(\"/dev/null\")失败!\n");
+            return -1;
+        }
+        if (dup2(fd, STDIN_FILENO) == -1) //先关闭STDIN_FILENO[这是规矩，已经打开的描述符，动他之前，先close]，类似于指针指向null，让/dev/null成为标准输入；
+        {
+            printf("ngx_daemon()中dup2(STDIN)失败!\n");
+            return -1;
+        }
+        if (dup2(fd, STDOUT_FILENO) == -1) //再关闭STDIN_FILENO，类似于指针指向null，让/dev/null成为标准输出；
+        {
+            printf("ngx_daemon()中dup2(STDOUT)失败!\n");
+            return -1;
+        }
 
         return 0;  //子进程返回
     }
@@ -111,7 +108,7 @@ namespace flyd {
         //sigprocmask()在第三章第五节详细讲解过
         if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) //第一个参数用了SIG_BLOCK表明设置 进程 新的信号屏蔽字 为 “当前信号屏蔽字 和 第二个参数指向的信号集的并集
         {
-            // ngx_log_error_core(NGX_LOG_ALERT,errno,"ngx_master_process_cycle()中sigprocmask()失败!");
+            LOG_ERROR << "ngx_master_process_cycle()中sigprocmask()失败!";
         }
         //即便sigprocmask失败，程序流程 也继续往下走
 
@@ -123,17 +120,17 @@ namespace flyd {
         //创建子进程后，父进程的执行流程会返回到这里，子进程不会走进来
         sigemptyset(&set); //信号屏蔽字为空，表示不屏蔽任何信号
 
-//        while(1) {
-//
-//            //    usleep(100000);
-//            //ngx_log_error_core(0,0,"haha--这是父进程，pid为%P",ngx_pid);
-//
-//           // sigsuspend(&set); //阻塞在这里，等待一个信号，此时进程是挂起的，不占用cpu时间，只有收到信号才会被唤醒（返回）；
-//
-//            sleep(1); //休息1秒
-//            //以后扩充.......
-//
-//        }// end for(;;)
+        while(1) {
+
+            //    usleep(100000);
+            //ngx_log_error_core(0,0,"haha--这是父进程，pid为%P",ngx_pid);
+
+           // sigsuspend(&set); //阻塞在这里，等待一个信号，此时进程是挂起的，不占用cpu时间，只有收到信号才会被唤醒（返回）；
+
+            sleep(1); //休息1秒
+            //以后扩充.......
+
+        }// end for(;;)
 
     }
 

@@ -8,6 +8,7 @@ SignalMap flyd::Signal::signals_ ;
 static void flyd_process_get_status(void);
 void flyd::Signal::Init() {
     AddSingal(SIGUSR1,flyd::Signal::SignalHandler);
+    AddSingal(SIGCHLD,flyd::Signal::SignalHandler);
 }
 
 void flyd::Signal::AddSingal(int signo, SigFunction sighandler)
@@ -19,9 +20,6 @@ void flyd::Signal::AddSingal(int signo, SigFunction sighandler)
     sigemptyset(&sa.sa_mask);
     if( sigaction(signo, &sa, NULL) < 0)
         LOG_ERROR << signo << "信号注册失败\n";
-    else{
-        LOG_INFO << signo << "信号注册成功\n";
-    }
 }
 
 void flyd::Signal::SignalHandler(int signo, siginfo_t *siginfo, void *ucontext)

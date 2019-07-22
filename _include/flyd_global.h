@@ -7,6 +7,14 @@
 
 extern FILE* g_filep;
 
+//定义进程类型的标志位
+enum Flyd_Process
+{
+    FLYD_UNDEFINED = 0,
+    FLYD_MASTER_PROCESS,
+    FLYD_WORK_PROCESS
+};
+extern Flyd_Process flyd_process;
 //定义类型别名CConfItem 类型指针，而c语言中是跟的对象名称
 typedef struct g_ConfItem
 {

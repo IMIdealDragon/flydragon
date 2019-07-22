@@ -3,36 +3,28 @@
 #include <unordered_map>
 #include <signal.h>
 #include <functional>
+#include "logging/Logging.h"
 
+typedef  void(*SigFunction)(int,siginfo_t *, void*);
+typedef std::unordered_map<int, SigFunction>  SignalMap;
 namespace flyd{
  class Signal{
   public:
      Signal(){};
      ~Signal(){};
 
-  public://静态成员函数不区分对象 类成员属于类本身，可通过类名访问
-//        static Signal& GetInstance()
-//        {
-//            static Signal value_;
-//
-//            return value_;
-//        }
-
-        static void SignalHandler(int signo, siginfo_t *siginfo, void *ucontext)
-        {
-            printf("signo == %d\n", signo);
-        }
   public:
-        typedef  void(*SigFunction)(int,siginfo_t *, void*);
+        static void SignalHandler(int signo, siginfo_t *siginfo, void *ucontext);
+
         void Init();
         void AddSingal(int signo, SigFunction sighandler);
 
-  public:
-
-        typedef std::unordered_map<int, SigFunction>  SignalMap;
-        SignalMap signals_;
+ public:
+        static SignalMap signals_;
     };
 
 }
+
+
 
 #endif

@@ -17,6 +17,7 @@
 char* mater_name = "flyd_master";
 extern pid_t flyd_pid, flyd_parent;
 
+
 namespace flyd {
 //描述：守护进程初始化
 //执行失败：返回-1，   子进程：返回0，父进程：返回1
@@ -32,23 +33,25 @@ namespace flyd {
         {
             case -1:
                 //创建子进程失败
-                printf("创建master子进程失败\n");
+                LOG_FATAL << "创建master子进程失败,退出\n";
                 return -1;
             case 0:
                 //master子进程，走到这里直接break;
                 LOG_INFO << "THIS IS MASTER PROCESS\n ";
                 prctl(PR_SET_NAME, mater_name);
+                flyd_process = FLYD_MASTER_PROCESS;
                 break;
             default:
                 //父进程以往 直接退出exit(0);现在希望回到主流程去释放一些资源
                 return 1;  //父进程直接返回1；
+                // exit(0);
         } //end switch
 
 
         //以下都是master子进程的程序空间了
         //3.调用setsid设置新的会话
         if (setsid() == -1) {
-            printf("flyd_daemon()中setsid()失败!\n");
+            LOG_ERROR<<"flyd_daemon()中setsid()失败!\n";
             return -1;
         }
 
@@ -59,7 +62,7 @@ namespace flyd {
         {
             if (close(i) == -1)  //释放资源这样这个文件描述符就可以被复用；不然这个数字【文件描述符】会被一直占着；
             {
-                printf("ngx_daemon()中close(fd)失败!\n");
+                LOG_ERROR << "ngx_daemon()中close(fd)失败!\n";
                 return -1;
             }
         }
@@ -67,17 +70,17 @@ namespace flyd {
         //6.重定向标准输入输出
         int fd = open("/dev/null", O_RDWR);
         if (fd == -1) {
-            printf("ngx_daemon()中open(\"/dev/null\")失败!\n");
+            LOG_ERROR << "ngx_daemon()中open(\"/dev/null\")失败!\n";
             return -1;
         }
         if (dup2(fd, STDIN_FILENO) == -1) //先关闭STDIN_FILENO[这是规矩，已经打开的描述符，动他之前，先close]，类似于指针指向null，让/dev/null成为标准输入；
         {
-            printf("ngx_daemon()中dup2(STDIN)失败!\n");
+            LOG_ERROR << "ngx_daemon()中dup2(STDIN)失败!\n";
             return -1;
         }
         if (dup2(fd, STDOUT_FILENO) == -1) //再关闭STDIN_FILENO，类似于指针指向null，让/dev/null成为标准输出；
         {
-            printf("ngx_daemon()中dup2(STDOUT)失败!\n");
+            LOG_ERROR << "ngx_daemon()中dup2(STDOUT)失败!\n";
             return -1;
         }
 
@@ -105,10 +108,10 @@ namespace flyd {
         //.........可以根据开发的实际需要往其中添加其他要屏蔽的信号......
 
         //设置，此时无法接受的信号；阻塞期间，你发过来的上述信号，多个会被合并为一个，暂存着，等你放开信号屏蔽后才能收到这些信号。。。
-        //sigprocmask()在第三章第五节详细讲解过
+        //sigprocmask()在第三章第五节详细讲解过 ， 设置信号屏蔽
         if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) //第一个参数用了SIG_BLOCK表明设置 进程 新的信号屏蔽字 为 “当前信号屏蔽字 和 第二个参数指向的信号集的并集
         {
-            LOG_ERROR << "ngx_master_process_cycle()中sigprocmask()失败!";
+            LOG_ERROR << "信号屏蔽设置失败!";
         }
         //即便sigprocmask失败，程序流程 也继续往下走
 
@@ -117,9 +120,14 @@ namespace flyd {
 //    int workprocess = p_config->GetIntDefault("WorkerProcesses",1); //从配置文件中得到要创建的worker进程数量
         flyd_start_worker_processes(4);  //这里要创建worker子进程
 
-        //创建子进程后，父进程的执行流程会返回到这里，子进程不会走进来
+        //清空信号屏蔽
         sigemptyset(&set); //信号屏蔽字为空，表示不屏蔽任何信号
+        if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) //第一个参数用了SIG_BLOCK表明设置 进程 新的信号屏蔽字 为 “当前信号屏蔽字 和 第二个参数指向的信号集的并集
+        {
+            LOG_ERROR << "清空信号屏蔽失败!";
+        }
 
+        dummyFlush();//进入主循环前将日志消息写入文件
         while(1) {
 
             //    usleep(100000);
@@ -153,12 +161,13 @@ namespace flyd {
         switch (pid)  //pid判断父子进程，分支处理
         {
             case -1: //产生子进程失败
-                //     ngx_log_error_core(NGX_LOG_ALERT,errno,"ngx_spawn_process()fork()产生子进程num=%d,procname=\"%s\"失败!",inum,pprocname);
+                     LOG_FATAL << "ngx_spawn_process()fork()产生子进程num=%d,procname=\"%s\"失败!";
                 return -1;
 
             case 0:  //子进程分支
                 flyd_parent = getppid();              //因为是子进程了，所有原来的pid变成了父pid
                 flyd_pid = getpid();                //重新获取pid,即本子进程的pid
+                flyd_process = FLYD_WORK_PROCESS;
                 flyd_worker_process_cycle(inum, pprocname);    //我希望所有worker子进程，在这个函数里不断循环着不出来，也就是说，子进程流程不往下边走;
                 break;
 
@@ -182,8 +191,9 @@ namespace flyd {
         //重新为子进程设置进程名，不要与父进程重复------
         prctl(PR_SET_NAME, pprocname);
         flyd_worker_process_init(inum);
-        //  ngx_log_error_core(NGX_LOG_NOTICE,0,"%s %P 【worker进程】启动并开始运行......!",pprocname,ngx_pid); //设置标题时顺便记录下来进程名，进程id等信息到日志
+        LOG_INFO << "【worker进程】" << pprocname << flyd_pid <<"启动并开始运行......!"; //设置标题时顺便记录下来进程名，进程id等信息到日志
 
+        dummyFlush();//进入主循环前让日志消息写入文件
         for (;;) {
 
 
@@ -195,15 +205,13 @@ namespace flyd {
 //描述：子进程创建时调用本函数进行一些初始化工作
     static void flyd_worker_process_init(int inum) {
 
-
         sigset_t set;      //信号集
 
         sigemptyset(&set);  //清空信号集
         if (sigprocmask(SIG_SETMASK, &set, NULL) == -1)  //原来是屏蔽那10个信号【防止fork()期间收到信号导致混乱】，现在不再屏蔽任何信号【接收任何信号】
         {
-            // ngx_log_error_core(NGX_LOG_ALERT,errno,"ngx_worker_process_init()中sigprocmask()失败!");
+            LOG_ERROR << "ngx_worker_process_init()中sigprocmask()失败!";
         }
 
-        return;
     }
 }

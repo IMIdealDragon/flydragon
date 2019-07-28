@@ -97,8 +97,8 @@ private:
     lp_connection_t             m_pconnections;                  //注意这里可是个指针，其实这是个连接池的首地址
     lp_connection_t             m_pfree_connections;             //空闲连接链表头，连接池中总是有某些连接被占用，为了快速在池中找到一个空闲的连接，我把空闲的连接专门用该成员记录;
     //【串成一串，其实这里指向的都是m_pconnections连接池里的没有被使用的成员】
-    //lpngx_event_t                  m_pread_events;                     //指针，读事件数组
-    //lpngx_event_t                  m_pwrite_events;                    //指针，写事件数组
+    //lp_event_t                   m_pread_events;                     //指针，读事件数组
+    //lp_event_t                   m_pwrite_events;                    //指针，写事件数组
     int                            m_connection_n;                     //当前进程中所有连接对象的总数【连接池大小】
     int                            m_free_connection_n;                //连接池中可用连接总数
 

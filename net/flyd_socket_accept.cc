@@ -171,6 +171,7 @@ void CSocekt::flyd_close_accepted_connection(lp_connection_t c)
     if(close(fd) == -1)
     {
         //ngx_log_error_core(NGX_LOG_ALERT,errno,"CSocekt::ngx_close_accepted_connection()中close(%d)失败!",fd);
+        LOG_ERROR << "CSocekt::ngx_close_accepted_connection()中close(%d)失败!";
     }
     return;
 }

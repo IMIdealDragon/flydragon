@@ -21,6 +21,8 @@ typedef class  CSocekt            CSocekt;//socket类
 
 typedef void (CSocekt::*flyd_event_handler_pt)(lp_connection_t c); //定义成员函数指针
 
+void flyd_process_events_and_timers();
+
 //监听端口结构体具体定义
 struct flyd_listening_s  //和监听端口有关的结构
 {

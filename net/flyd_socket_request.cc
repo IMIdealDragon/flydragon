@@ -19,12 +19,10 @@
 #include "flyd_global.h"
 #include "flyd_func.h"
 #include "flyd_socket.h"
-#include "flyd_singleton.h"
-#include "../app/flyd_config.h"
 #include "../logging/Logging.h"
 
 //来数据时候的处理，当连接上有数据来的时候，本函数会被ngx_epoll_process_events()所调用  ,官方的类似函数为ngx_http_wait_request_handler();
-void CSocekt::flyd_wait_request_handler(lpngx_connection_t c)
+void CSocekt::flyd_wait_request_handler(lp_connection_t c)
 {
     //ngx_log_stderr(errno,"22222222222222222222222.");
 

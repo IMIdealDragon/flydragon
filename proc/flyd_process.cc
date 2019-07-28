@@ -198,10 +198,10 @@ static void flyd_worker_process_cycle(int inum, const char *pprocname) {
         dummyFlush();//进入主循环前让日志消息写入文件
         for (;;) {
 
-
+            flyd_process_events_and_timers(); //处理网络事件和定时器事件
         } //end for(;;)
 
-        return;
+
     }
 
 //描述：子进程创建时调用本函数进行一些初始化工作

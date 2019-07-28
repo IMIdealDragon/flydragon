@@ -215,7 +215,8 @@ void CSocekt::flyd_close_listening_sockets()
         //ngx_log_stderr(0,"端口是%d,socketid是%d.",m_ListenSocketList[i]->port,m_ListenSocketList[i]->fd);
         LOG_DEBUG << "端口是 " << m_ListenSocketList[i]->port << "socketid是" << m_ListenSocketList[i]->fd;
         close(m_ListenSocketList[i]->fd);
-        ngx_log_error_core(NGX_LOG_INFO,0,"关闭监听端口%d!",m_ListenSocketList[i]->port); //显示一些信息到日志中
+        LOG_INFO << "关闭监听端口" << m_ListenSocketList[i]->port;
+        //ngx_log_error_core(NGX_LOG_INFO,0,"关闭监听端口%d!",m_ListenSocketList[i]->port); //显示一些信息到日志中
     }//end for(int i = 0; i < m_ListenPortCount; i++)
 }
 
@@ -361,7 +362,7 @@ int CSocekt::flyd_epoll_add_event(int fd,
 
     if(epoll_ctl(m_epollhandle,eventtype,fd,&ev) == -1)
     {
-        LOG_FATAL << "CSocekt::ngx_epoll_add_event()中epoll_ctl失败."
+        LOG_FATAL << "CSocekt::ngx_epoll_add_event()中epoll_ctl失败.";
       //  ngx_log_stderr(errno,"CSocekt::ngx_epoll_add_event()中epoll_ctl(%d,%d,%d,%u,%u)失败.",fd,readevent,writeevent,otherflag,eventtype);
         //exit(2); //这是致命问题了，直接退，资源由系统释放吧，这里不刻意释放了，比较麻烦，后来发现不能直接退；
         return -1;
@@ -381,7 +382,7 @@ int CSocekt::flyd_epoll_process_events(int timer)
     //返回值：有错误发生返回-1，错误在errno中，比如你发个信号过来，就返回-1，错误信息是(4: Interrupted system call)
     //       如果你等待的是一段时间，并且超时了，则返回0；
     //       如果返回>0则表示成功捕获到这么多个事件【返回值里】
-    int events = epoll_wait(m_epollhandle,m_events,NGX_MAX_EVENTS,timer);
+    int events = epoll_wait(m_epollhandle,m_events,FLYD_MAX_EVENTS,timer);
 
     if(events == -1)
     {
@@ -440,7 +441,7 @@ int CSocekt::flyd_epoll_process_events(int timer)
 
             //这里可以增加个日志，也可以不增加日志
             //ngx_log_error_core(NGX_LOG_DEBUG,0,"CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件:%p.",c);
-            LOG_ERROR << "CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件" << (int)c;
+            LOG_ERROR << "CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件" ;
             continue; //这种事件就不处理即可
         }
 

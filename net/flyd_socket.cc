@@ -412,7 +412,8 @@ int CSocekt::flyd_epoll_process_events(int timer)
             return 1;
         }
         //无限等待【所以不存在超时】，但却没返回任何事件，这应该不正常有问题
-        ngx_log_error_core(NGX_LOG_ALERT,0,"CSocekt::ngx_epoll_process_events()中epoll_wait()没超时却没返回任何事件!");
+        LOG_ERROR << "CSocekt::ngx_epoll_process_events()中epoll_wait()没超时却没返回任何事件!";
+        //ngx_log_error_core(NGX_LOG_ALERT,0,"CSocekt::ngx_epoll_process_events()中epoll_wait()没超时却没返回任何事件!");
         return 0; //非正常返回
     }
 
@@ -420,14 +421,14 @@ int CSocekt::flyd_epoll_process_events(int timer)
     //ngx_log_stderr(errno,"惊群测试1:%d",events);
 
     //走到这里，就是属于有事件收到了
-    lpngx_connection_t c;
+    lp_connection_t c;
     uintptr_t          instance;
     uint32_t           revents;
     for(int i = 0; i < events; ++i)    //遍历本次epoll_wait返回的所有事件，注意events才是返回的实际事件数量
     {
-        c = (lpngx_connection_t)(m_events[i].data.ptr);           //ngx_epoll_add_event()给进去的，这里能取出来
+        c = (lp_connection_t)(m_events[i].data.ptr);           //ngx_epoll_add_event()给进去的，这里能取出来
         instance = (uintptr_t) c & 1;                             //将地址的最后一位取出来，用instance变量标识, 见ngx_epoll_add_event，该值是当时随着连接池中的连接一起给进来的
-        c = (lpngx_connection_t) ((uintptr_t)c & (uintptr_t) ~1); //最后1位干掉，得到真正的c地址
+        c = (lp_connection_t) ((uintptr_t)c & (uintptr_t) ~1); //最后1位干掉，得到真正的c地址
 
         //仔细分析一下官方nginx的这个判断
         if(c->fd == -1)  //一个套接字，当关联一个 连接池中的连接【对象】时，这个套接字值是要给到c->fd的，
@@ -438,7 +439,8 @@ int CSocekt::flyd_epoll_process_events(int timer)
             //第三个事件，假如这第三个事件，也跟第一个事件对应的是同一个连接，那这个条件就会成立；那么这种事件，属于过期事件，不该处理
 
             //这里可以增加个日志，也可以不增加日志
-            ngx_log_error_core(NGX_LOG_DEBUG,0,"CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件:%p.",c);
+            //ngx_log_error_core(NGX_LOG_DEBUG,0,"CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件:%p.",c);
+            LOG_ERROR << "CSocekt::ngx_epoll_process_events()中遇到了fd=-1的过期事件" << (int)c;
             continue; //这种事件就不处理即可
         }
 
@@ -459,8 +461,9 @@ int CSocekt::flyd_epoll_process_events(int timer)
             //如果收到了若干个事件，其中连接关闭也搞了多次，导致这个instance标志位被取反2次，那么，造成的结果就是：还是有可能遇到某些过期事件没有被发现【这里也就没有被continue】，照旧被当做没过期事件处理了；
             //如果是这样，那就只能被照旧处理了。可能会造成偶尔某个连接被误关闭？但是整体服务器程序运行应该是平稳，问题不大的，这种漏网而被当成没过期来处理的的过期事件应该是极少发生的
 
-            ngx_log_error_core(NGX_LOG_DEBUG,0,"CSocekt::ngx_epoll_process_events()中遇到了instance值改变的过期事件:%p.",c);
-            continue; //这种事件就不处理即可
+           // ngx_log_error_core(NGX_LOG_DEBUG,0,"CSocekt::ngx_epoll_process_events()中遇到了instance值改变的过期事件:%p.",c);
+           LOG_ERROR <<  "CSocekt::ngx_epoll_process_events()中遇到了instance值改变的过期事件:" << c;
+           continue; //这种事件就不处理即可
         }
 
         //能走到这里，我们认为这些事件都没过期，就正常开始处理
@@ -485,7 +488,8 @@ int CSocekt::flyd_epoll_process_events(int timer)
         {
             //....待扩展
 
-            ngx_log_stderr(errno,"111111111111111111111111111111.");
+           // ngx_log_stderr(errno,"111111111111111111111111111111.");
+           LOG_ERROR << "SDDS" ;
 
         }
     } //end for(int i = 0; i < events; ++i)

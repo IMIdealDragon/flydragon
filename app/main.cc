@@ -2,7 +2,6 @@
 //Use of this source code is governed by GPL-style license
 //Author: Ideal Dragon
 
-#include <iostream>
 #include "flyd_func.h"
 #include "flyd_config.h"
 #include "logging/Logging.h"

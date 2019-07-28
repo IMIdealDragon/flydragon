@@ -19,6 +19,6 @@ set(MAIN_SRC
         flyd_string.cc
         ../signal/flyd_signal.cc
         ../proc/flyd_process.cc
-        )
+        ../net/flyd_socket.cc ../net/flyd_events.cc)
 add_executable(flydragonxxxxx ${MAIN_SRC} ${BASE_SRC})
 target_link_libraries(flydragonxxxxx pthread rt)

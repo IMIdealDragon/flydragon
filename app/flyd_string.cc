@@ -1,6 +1,6 @@
 
 //Copyright(C) Ideal Dragon. All rights reserved.
-//Use if this source code is governed by GPL-style license
+//Use of this source code is governed by GPL-style license
 //Author: Ideal Dragon
 
 

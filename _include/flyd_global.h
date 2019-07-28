@@ -1,6 +1,6 @@
-//
-// Created by ideal2 on 19-7-6.
-//
+//Copyright(C) Ideal Dragon. All rights reserved.
+//Use of this source code is governed by GPL-style license
+//Author: Ideal Dragon
 
 #ifndef FLYDRAGON_FLYD_GLOBAL_H
 #define FLYDRAGON_FLYD_GLOBAL_H

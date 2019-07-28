@@ -10,12 +10,14 @@
 #include "flyd_process.h"
 #include <sys/prctl.h>
 #include <signal.h>
+#include <net/flyd_socket.h>
 #include "flyd_global.h"
 #include "flyd_func.h"
 #include "logging/Logging.h"
 
 char* mater_name = "flyd_master";
 extern pid_t flyd_pid, flyd_parent;
+extern CSocekt g_socket;               //socket全局对象
 
 
 namespace flyd {
@@ -184,9 +186,9 @@ namespace flyd {
 //描述：worker子进程的功能函数，每个woker子进程，就在这里循环着了（无限循环【处理网络事件和定时器事件以对外提供web服务】）
 //     子进程分叉才会走到这里
 //inum：进程编号【0开始】
-    static void flyd_worker_process_cycle(int inum, const char *pprocname) {
+static void flyd_worker_process_cycle(int inum, const char *pprocname) {
         //设置一下变量
-//    ngx_process = NGX_PROCESS_WORKER;  //设置进程的类型，是worker进程
+//    ngx_p rocess = NGX_PROCESS_WORKER;  //设置进程的类型，是worker进程
 
         //重新为子进程设置进程名，不要与父进程重复------
         prctl(PR_SET_NAME, pprocname);
@@ -213,5 +215,6 @@ namespace flyd {
             LOG_ERROR << "ngx_worker_process_init()中sigprocmask()失败!";
         }
 
+        g_socket.flyd_epoll_init();
     }
 }

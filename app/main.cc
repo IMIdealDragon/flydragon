@@ -1,5 +1,5 @@
 //Copyright(C) Ideal Dragon. All rights reserved.
-//Use if this source code is governed by GPL-style license
+//Use of this source code is governed by GPL-style license
 //Author: Ideal Dragon
 
 #include <iostream>
@@ -9,6 +9,7 @@
 #include "signal/flyd_signal.h"
 #include "flyd_singleton.h"
 #include "proc/flyd_process.h"
+#include "net/flyd_socket.h"
 
 using namespace flyd;
 //进程相关变量
@@ -31,6 +32,9 @@ void dummyFlush()
     fflush(g_filep);
 }
 
+//socket相关
+CSocekt g_socket;               //socket全局对象
+
 int main(int argc, char **argv)
 {
 
@@ -39,6 +43,7 @@ int main(int argc, char **argv)
         printf("打开失败\n");
     muduo::Logger::setOutput(dummyOutput);
     muduo::Logger::setFlush(dummyFlush);
+    muduo::Logger::setLogLevel(muduo::Logger::DEBUG);
 
     //初始化信号
     Singleton<Signal>::getInstance().Init();
@@ -66,6 +71,12 @@ int main(int argc, char **argv)
     flyd_pid = getpid();      //取得进程pid
     flyd_parent = getppid();     //取得父进程的id
     LOG_INFO << "主进程pid = "<< flyd_pid << "ppid = " << flyd_parent;
+
+    if(g_socket.Initialize())//初始化socket
+    {
+        LOG_FATAL << "socket initialize failed ";
+    }
+
 
     int cdaemonresult = flyd_daemon();
     if(cdaemonresult == -1) //fork()失败

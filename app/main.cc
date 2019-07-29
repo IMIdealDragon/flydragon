@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     flyd_parent = getppid();     //取得父进程的id
     LOG_INFO << "主进程pid = "<< flyd_pid << "ppid = " << flyd_parent;
 
-    if(g_socket.Initialize())//初始化socket
+    if(!g_socket.Initialize())//初始化socket
     {
         LOG_FATAL << "socket initialize failed ";
     }

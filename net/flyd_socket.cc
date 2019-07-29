@@ -173,7 +173,10 @@ bool CSocekt::flyd_open_listening_sockets()
         m_ListenSocketList.push_back(p_listensocketitem);          //加入到队列中
     } //end for(int i = 0; i < m_ListenPortCount; i++)
     if(m_ListenSocketList.size() <= 0)  //不可能一个端口都不监听吧
+    {
+        LOG_ERROR << "一个端口都没有监听";
         return false;
+    }
     return true;
 }
 //设置socket连接为非阻塞模式【这种函数的写法很固定】：

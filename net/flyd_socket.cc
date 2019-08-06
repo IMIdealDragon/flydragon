@@ -387,6 +387,7 @@ int CSocekt::flyd_epoll_process_events(int timer)
     //       如果返回>0则表示成功捕获到这么多个事件【返回值里】
     int events = epoll_wait(m_epollhandle,m_events,FLYD_MAX_EVENTS,timer);
 
+    //epoll_ctl()
     if(events == -1)
     {
         //有错误发生，发送某个信号给本进程就可以导致这个条件成立，而且错误码根据观察是4；

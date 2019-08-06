@@ -27,7 +27,19 @@ void CSocekt::flyd_wait_request_handler(lp_connection_t c)
     //ngx_log_stderr(errno,"22222222222222222222222.");
 
     LOG_INFO << "2222222222222";
+    //ET测试代码
+    unsigned char buf[10]={0};
+    memset(buf,0,sizeof(buf));
+    do
+    {
+        int n = recv(c->fd,buf,2,0); //每次只收两个字节
+        if(n == -1 && errno == EAGAIN)
+            break; //数据收完了
+        else if(n == 0)
+            break;
+        LOG_INFO << "OK，收到的字节数为" << n << "内容为" << buf;
+    }while(1);
 
 
-    return;
+
 }

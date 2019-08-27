@@ -159,19 +159,6 @@ void CSocekt::flyd_event_accept(lp_connection_t oldc)
         break;  //一般就是循环一次就跳出去
     } while (1);
 
-    return;
+
 }
 
-//用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
-void CSocekt::flyd_close_accepted_connection(lp_connection_t c)
-{
-    int fd = c->fd;
-    flyd_free_connection(c);
-    c->fd = -1; //官方nginx这么写，但这有意义吗？
-    if(close(fd) == -1)
-    {
-        //ngx_log_error_core(NGX_LOG_ALERT,errno,"CSocekt::ngx_close_accepted_connection()中close(%d)失败!",fd);
-        LOG_ERROR << "CSocekt::ngx_close_accepted_connection()中close(%d)失败!";
-    }
-    return;
-}

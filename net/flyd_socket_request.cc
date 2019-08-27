@@ -21,13 +21,15 @@
 #include "flyd_socket.h"
 #include "../logging/Logging.h"
 
-//来数据时候的处理，当连接上有数据来的时候，本函数会被ngx_epoll_process_events()所调用  ,官方的类似函数为ngx_http_wait_request_handler();
+//来数据时候的处理，当连接上有数据来的时候，本函数会被ngx_epoll_process_events()所调用
+// ,官方的类似函数为ngx_http_wait_request_handler();
 void CSocekt::flyd_wait_request_handler(lp_connection_t c)
 {
     //ngx_log_stderr(errno,"22222222222222222222222.");
 
     LOG_INFO << "2222222222222";
     //ET测试代码
+    /*
     unsigned char buf[10]={0};
     memset(buf,0,sizeof(buf));
     do
@@ -38,7 +40,21 @@ void CSocekt::flyd_wait_request_handler(lp_connection_t c)
         else if(n == 0)
             break;
         LOG_INFO << "OK，收到的字节数为" << n << "内容为" << buf;
-    }while(1);
+    }while(1);*/
+
+    //LT测试代码
+    /*unsigned char buf[10]={0};
+    memset(buf,0,sizeof(buf));
+    int n = recv(c->fd,buf,2,0);
+    if(n  == 0)
+    {
+        //连接关闭
+        ngx_free_connection(c);
+        close(c->fd);
+        c->fd = -1;
+    }
+    LOG_INFO << "OK，收到的字节数为" << n << "内容为" << buf;
+    */
 
 
 

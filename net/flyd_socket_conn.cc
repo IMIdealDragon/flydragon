@@ -50,6 +50,11 @@ lp_connection_t CSocekt::flyd_get_connection(int isock)
     //(2)把以往有用的数据搞出来后，清空并给适当值
     memset(c,0,sizeof(flyd_connection_t));                //注意，类型不要用成lpngx_connection_t，否则就出错了
     c->fd = isock;                                       //套接字要保存起来，这东西具有唯一性
+    c->curStat = _PKG_HD_INIT;        //收包处于 初始状态，准备接收数据包头
+
+    c->precvbuf = c->dataHeadInfo;  //数据先收到包头中
+    c->irecvlen = sizeof(COMM_PKG_HEADER); //先收包头这么长的数据
+
     //....其他内容再增加
 
     //(3)这个值有用，所以在上边(1)中被保留，没有被清空，这里又把这个值赋回来
@@ -71,4 +76,19 @@ void CSocekt::flyd_free_connection(lp_connection_t c)
     m_pfree_connections = c;                             //修改 原来的链头使链头指向新节点
     ++m_free_connection_n;                               //空闲连接多1
     return;
+}
+
+//用户连入，我们accept4()时，得到的socket在处理中产生失败，
+// 则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
+void CSocekt::flyd_close_connection(lp_connection_t c)
+{
+    int fd = c->fd;
+    flyd_free_connection(c);
+    c->fd = -1; //官方nginx这么写，但这有意义吗？
+    if(close(fd) == -1)
+    {
+        //ngx_log_error_core(NGX_LOG_ALERT,errno,"CSocekt::ngx_close_accepted_connection()中close(%d)失败!",fd);
+        LOG_ERROR << "CSocekt::ngx_close_accepted_connection()中close(%d)失败!";
+    }
+
 }

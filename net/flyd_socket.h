@@ -11,6 +11,10 @@
 #include <vector>
 #include <sys/epoll.h>
 #include <sys/socket.h>
+#include <flyd_comm.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <atomic>
 
 #define FLYD_LISTEN_BACKLOG 511  //已完成连接队列数目
 #define FLYD_MAX_EVENTS     512  //最大连接数
@@ -46,14 +50,51 @@ struct flyd_connection_s
 
     //和读有关的标志-----------------------
     //uint8_t                   r_ready;        //读准备好标记【暂时没闹明白官方要怎么用，所以先注释掉】
-    uint8_t                   w_ready;        //写准备好标记
+    uint8_t                    w_ready;        //写准备好标记
 
     flyd_event_handler_pt      rhandler;       //读事件的相关处理方法
     flyd_event_handler_pt      whandler;       //写事件的相关处理方法
 
     //--------------------------------------------------
     lp_connection_t             data;           //这是个指针【等价于传统链表里的next成员：后继指针】，指向下一个本类型对象，用于把空闲的连接池对象串起来构成一个单向链表，方便取用
+
+    //和epoll事件有关的
+    uint32_t                    events;        //epoll事件标志
+
+    //和收包有关
+    unsigned char              curStat;       //当前收包的状态
+    char                        dataHeadInfo[_DATA_BUFSIZE_]; //用于保存收到的数据的包头信息,已经收到的包头部分的内容
+    char                        *precvbuf;           //接收数据的缓冲区头指针，对收到补全的包有用，再收到数据要放的地址
+    unsigned int               irecvlen;            //要收到多少数据，由这个变量指定，还要收多少个数据
+    char                        *precvMemPointer;    //new出来的用于收包的内存首地址，释放用的
+
+    pthread_mutex_t             logicProcMutex;       //逻辑处理的相关互斥量
+
+    //发包有关
+    std::atomic<int>            iThrowsendCount;
+    char                        *psendMenPointer;//发送完成后释放用的，整个数据的头指针，其实是 消息头 + 包头 + 包体
+    char                        *psendbuf;     //发送数据的缓冲区的头指针，开始 其实是包头+包体
+    unsigned int               isendlen;      //要发送多少数据
+
+    //和回收有关
+    time_t                      inRecyTime;    //入到资源回收站里去的时间
+
+    //和心跳包有关
+    time_t                      lastPingTime;  //上次ping的时间【上次发送心跳包的事件】
+
+    //和网络安全相关
+    uint64_t                    FloodkickLastTime;  //Flood攻击上次收到包的时间
+    int                         FloodAttackCount;  //Flood攻击在该时间内收到包的次数统计
+    std::atomic<int>            iSendCount;     //发送队列中有的数据条目数，若client只发不收，则可能造成此数过大，依据此数做出踢出处理
 };
+
+//消息头，引入的目的是当收到数据包时，额外记录一些内容以备将来使用
+typedef struct _STRUC_MSG_HEADER
+{
+    lp_connection_t pConn;    //记录对应的连接，注意这是个指针
+    uint64_t        iCurrsequence;   //收到数据包时，记录对应连接的序号，将来能用于比较是否连接已经作废
+}STRUC_MSG_HEADER, *LPSTRUC_MSG_HEADER;
+
 
 //socket相关类
 class CSocekt
@@ -81,7 +122,7 @@ private:
     void flyd_event_accept(lp_connection_t oldc);                    //建立新连接
     void flyd_wait_request_handler(lp_connection_t c);               //设置数据来时的读处理函数
 
-    void flyd_close_accepted_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
+    void flyd_close_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
 
     //获取对端信息相关
     size_t flyd_sock_ntop(struct sockaddr *sa,int port,u_char *text,size_t len);  //根据参数1给定的信息，获取地址端口字符串，返回这个字符串的长度

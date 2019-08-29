@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <atomic>
+#include <list>
 
 #define FLYD_LISTEN_BACKLOG 511  //已完成连接队列数目
 #define FLYD_MAX_EVENTS     512  //最大连接数
@@ -68,6 +69,10 @@ struct flyd_connection_s
     unsigned int               irecvlen;            //要收到多少数据，由这个变量指定，还要收多少个数据
     char                        *precvMemPointer;    //new出来的用于收包的内存首地址，释放用的
 
+    bool                      ifnewrecvMem;       //如果我们成功的收到了包头，那么我们就要分配内存开始保存 包头+消息头+包体内容，这个标记用来标记是否我们new过内存，因为new过是需要释放的
+    char                      *pnewMemPointer;   //new出来的用于收包的内存首地址，和ifnewrecvMem配对使用
+
+
     pthread_mutex_t             logicProcMutex;       //逻辑处理的相关互斥量
 
     //发包有关
@@ -86,6 +91,8 @@ struct flyd_connection_s
     uint64_t                    FloodkickLastTime;  //Flood攻击上次收到包的时间
     int                         FloodAttackCount;  //Flood攻击在该时间内收到包的次数统计
     std::atomic<int>            iSendCount;     //发送队列中有的数据条目数，若client只发不收，则可能造成此数过大，依据此数做出踢出处理
+
+
 };
 
 //消息头，引入的目的是当收到数据包时，额外记录一些内容以备将来使用
@@ -121,6 +128,13 @@ private:
     //一些业务处理函数handler
     void flyd_event_accept(lp_connection_t oldc);                    //建立新连接
     void flyd_wait_request_handler(lp_connection_t c);               //设置数据来时的读处理函数
+    ssize_t recvproc(lp_connection_t pConn,char *buff,ssize_t buflen); //接收从客户端来的数据专用函数
+
+    void flyd_wait_request_handler_proc_p1(lp_connection_t c);
+    void flyd_wait_request_handler_proc_plast(lp_connection_t c);
+    void inMsgRecvQueue(char *buf); //buf这段内存 ： 消息头 + 包头 + 包体
+    void tmpoutMsgRecvQueue();
+
 
     void flyd_close_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
 
@@ -150,6 +164,11 @@ private:
 
     struct epoll_event             m_events[FLYD_MAX_EVENTS];           //用于在epoll_wait()中承载返回的所发生的事件
 
+    //和通讯相关的一些变量
+    size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
+    size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
+
+    std::list<char *>              m_MsgRecvQueue;                     //接收数据消息队列
 };
 
 

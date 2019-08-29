@@ -16,7 +16,6 @@
 #include <sys/ioctl.h> //ioctl
 #include <arpa/inet.h>
 
-#include "flyd_global.h"
 #include "flyd_func.h"
 #include "flyd_socket.h"
 #include "flyd_singleton.h"
@@ -86,6 +85,8 @@ void CSocekt::ReadConf()
     m_ListenPortCount = Singleton<Config>::getInstance().GetIntDefault("ListenPortCount", 1);
     LOG_DEBUG << "worker_connections = " << m_worker_connections << "ListenPortCount = " << m_ListenPortCount;
 }
+
+
 //监听端口【支持多个端口】，这里遵从nginx的函数命名
 //在创建worker进程之前就要执行这个函数；
 bool CSocekt::flyd_open_listening_sockets()
@@ -167,7 +168,7 @@ bool CSocekt::flyd_open_listening_sockets()
         lp_listening_t p_listensocketitem = new flyd_listening_t; //千万不要写错，注意前边类型是指针，后边类型是一个结构体
         memset(p_listensocketitem,0,sizeof(flyd_listening_t));      //注意后边用的是 ngx_listening_t而不是lpngx_listening_t
         p_listensocketitem->port = iport;                          //记录下所监听的端口号
-        p_listensocketitem->fd   = isock;                          //套接字木柄保存下来
+        p_listensocketitem->fd   = isock;                          //套接字句柄保存下来
      //   ngx_log_error_core(NGX_LOG_INFO,0,"监听%d端口成功!",iport); //显示一些信息到日志中
         LOG_INFO << "监听" << iport << "端口成功!";
         m_ListenSocketList.push_back(p_listensocketitem);          //加入到队列中
@@ -353,6 +354,7 @@ int CSocekt::flyd_epoll_add_event(int fd,
         //.....
     }
 
+//otherflag里面包含了ET模式和LT模式的标志位
     if(otherflag != 0)
     {
         ev.events |= otherflag;

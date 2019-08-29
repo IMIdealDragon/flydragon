@@ -3,14 +3,14 @@
 set -x
 
 SOURCE_DIR=`pwd`
-BUILD_DIR=${BUILD_DIR:-../build}
+BUILD_DIR=${BUILD_DIR:-../build1}
 BUILD_TYPE=${BUILD_TYPE:-release}
 INSTALL_DIR=${INSTALL_DIR:-../${BUILD_TYPE}-install-cpp11}
 CXX=${CXX:-g++}
 
 ln -sf $BUILD_DIR/$BUILD_TYPE-cpp11/compile_commands.json
 
-cp ${SOURCE_DIR}/flyd.conf $BUILD_DIR/$BUILD_TYPE-cpp11/flyd.conf
+cp ${SOURCE_DIR}/flyd.conf $BUILD_DIR/$BUILD_TYPE-cpp11/
 
 mkdir -p $BUILD_DIR/$BUILD_TYPE-cpp11 \
   && cd $BUILD_DIR/$BUILD_TYPE-cpp11 \

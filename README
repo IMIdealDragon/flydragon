@@ -1,0 +1,1 @@
+ps -eo pid,ppid,sid,tty,pgrp,comm,stat,cmd | grep -E 'bash|PID|flyd'

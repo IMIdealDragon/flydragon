@@ -16,8 +16,7 @@
 #include <sys/ioctl.h> //ioctl
 #include <arpa/inet.h>
 
-#include "flyd_global.h"
-#include "flyd_func.h"
+
 #include "flyd_socket.h"
 #include "flyd_singleton.h"
 #include "../app/flyd_config.h"
@@ -135,7 +134,7 @@ void CSocekt::flyd_event_accept(lp_connection_t oldc)
             if(setnonblocking(s) == false)
             {
                 //设置非阻塞居然失败
-                flyd_close_accepted_connection(newc);
+                flyd_close_connection(newc);
                 return; //直接返回
             }
         }
@@ -146,13 +145,13 @@ void CSocekt::flyd_event_accept(lp_connection_t oldc)
         //客户端应该主动发送第一次的数据，这里将读事件加入epoll监控
         if(flyd_epoll_add_event(s,                 //socket句柄
                                1,0,              //读，写
-                               EPOLLET,          //其他补充标记【EPOLLET(高速模式，边缘触发ET)】
+                               0,    //其他补充标记【EPOLLET(边缘触发ET)，0表示这里采用LT模式】
                                EPOLL_CTL_ADD,    //事件类型【增加，还有删除/修改】
                                newc              //连接池中的连接
         ) == -1)
         {
             //增加事件失败，失败日志在ngx_epoll_add_event中写过了，因此这里不多写啥；
-            flyd_close_accepted_connection(newc);
+            flyd_close_connection(newc);
             return; //直接返回
         }
 

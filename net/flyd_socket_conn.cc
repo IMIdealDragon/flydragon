@@ -22,7 +22,7 @@
 #include "flyd_singleton.h"
 #include "../app/flyd_config.h"
 #include "../logging/Logging.h"
-
+#include "../misc/flyd_memory.h"
 //从连接池中获取一个空闲连接【当一个客户端连接TCP进入，
 //我希望把这个连接和我的 连接池中的 一个连接【对象】绑到一起，
 //后续 我可以通过这个连接，把这个对象拿到，因为对象里边可以记录各种信息】
@@ -55,6 +55,9 @@ lp_connection_t CSocekt::flyd_get_connection(int isock)
     c->precvbuf = c->dataHeadInfo;  //数据先收到包头中
     c->irecvlen = sizeof(COMM_PKG_HEADER); //先收包头这么长的数据
 
+    c->ifnewrecvMem = false;
+    c->pnewMemPointer = NULL;
+
     //....其他内容再增加
 
     //(3)这个值有用，所以在上边(1)中被保留，没有被清空，这里又把这个值赋回来
@@ -68,6 +71,14 @@ lp_connection_t CSocekt::flyd_get_connection(int isock)
 //归还参数c所代表的连接到到连接池中，注意参数类型是lpngx_connection_t
 void CSocekt::flyd_free_connection(lp_connection_t c)
 {
+    if(c->ifnewrecvMem == true)
+    {
+        //我们曾经给这个连接分配过内存，则要释放
+        CMemory::GetInstance()->FreeMemory(c->pnewMemPointer);
+        c->pnewMemPointer = NULL;
+        c->ifnewrecvMem = false;
+    }
+
     c->data = m_pfree_connections;                       //回收的节点指向原来串起来的空闲链的链头
 
     //节点本身也要干一些事

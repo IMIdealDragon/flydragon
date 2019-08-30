@@ -28,7 +28,8 @@ using namespace flyd;
 //构造函数
 CSocekt::CSocekt() : m_worker_connections(1), m_ListenPortCount(1),
                     m_epollhandle(-1), m_pconnections(NULL),
-                    m_pfree_connections(NULL)
+                    m_pfree_connections(NULL),m_iLenPkgHeader(sizeof(COMM_PKG_HEADER)),
+                    m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER))
 {
     //配置相关
 //    m_worker_connections = 1;    //epoll连接最大项数
@@ -355,6 +356,7 @@ int CSocekt::flyd_epoll_add_event(int fd,
     }
 
 //otherflag里面包含了ET模式和LT模式的标志位
+    
     if(otherflag != 0)
     {
         ev.events |= otherflag;
@@ -364,7 +366,7 @@ int CSocekt::flyd_epoll_add_event(int fd,
     //比如c是个地址，可能的值是 0x00af0578，对应的二进制是‭101011110000010101111000‬，而 | 1后是0x00af0579
     ev.data.ptr = (void *)( (uintptr_t)c | c->instance);   //把对象弄进去，后续来事件时，用epoll_wait()后，这个对象能取出来用
     //但同时把一个 标志位【不是0就是1】弄进去
-
+    ev.events = EPOLLIN|EPOLLRDHUP;
     if(epoll_ctl(m_epollhandle,eventtype,fd,&ev) == -1)
     {
         LOG_FATAL << "CSocekt::ngx_epoll_add_event()中epoll_ctl失败.";

@@ -20,14 +20,14 @@ void CSocekt::flyd_wait_request_handler(lp_connection_t c)
 {
     LOG_INFO << "调用了flyd_wait_request_handler函数";
     //收包，注意我们用的第二个和第三个参数，我们用的始终是这两个参数，因此我们必须保证 c->precvbuf指向正确的收包位置，保证c->irecvlen指向正确的收包宽度
+    
     ssize_t reco = recvproc(c,c->precvbuf,c->irecvlen);
+    LOG_INFO << "要接收" << c->irecvlen << "字节" << "收到" << reco << "字节";
     if(reco <= 0)
     {
         return;//该处理的上边这个recvproc()函数处理过了，这里<=0是直接return
     }
 
-
-    LOG_INFO << reco << "字节" ;
     //走到这里，说明成功收到了一些字节（>0），就要开始判断收到了多少数据了
     if(c->curStat == _PKG_HD_INIT) //连接建立起来时肯定是这个状态，因为在ngx_get_connection()中已经把curStat成员赋值成_PKG_HD_INIT了
     {
@@ -56,7 +56,7 @@ void CSocekt::flyd_wait_request_handler(lp_connection_t c)
         else
         {
             //包头还是没收完整，继续收包头
-            //c->curStat        = _PKG_HD_RECVING;                 //没必要
+            c->curStat        = _PKG_HD_RECVING;                 //没必要
             c->precvbuf       = c->precvbuf + reco;              //注意收后续包的内存往后走
             c->irecvlen       = c->irecvlen - reco;              //要收的内容当然要减少，以确保只收到完整的包头先
         }
@@ -105,17 +105,18 @@ ssize_t CSocekt::recvproc(lp_connection_t c,char *buff,ssize_t buflen)  //ssize_
 {
     ssize_t n;
 
-    n = recv(c->fd, buff, buflen, 0); //recv()系统函数， 最后一个参数flag，一般为0；
+    n = read(c->fd, buff, buflen); //recv()系统函数， 最后一个参数flag，一般为0；
     if(n == 0)
     {
         //客户端关闭【应该是正常完成了4次挥手】，我这边就直接回收连接连接，关闭socket即可
-        //ngx_log_stderr(0,"连接被客户端正常关闭[4路挥手关闭]！");
+        LOG_INFO << "连接被客户端正常关闭[4路挥手关闭]！";
         flyd_close_connection(c);
         return -1;
     }
     //客户端没断，走这里
     if(n < 0) //这被认为有错误发生
     {
+        LOG_INFO << "errno的值是" << errno;
         //EAGAIN和EWOULDBLOCK[【这个应该常用在hp上】应该是一样的值，表示没收到数据，一般来讲，在ET模式下会出现这个错误，因为ET模式下是不停的recv肯定有一个时刻收到这个errno，但LT模式下一般是来事件才收，所以不该出现这个返回值
         if(errno == EAGAIN || errno == EWOULDBLOCK)
         {

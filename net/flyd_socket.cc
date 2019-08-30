@@ -21,6 +21,7 @@
 #include "flyd_singleton.h"
 #include "../app/flyd_config.h"
 #include "../logging/Logging.h"
+#include "../misc/flyd_memory.h"
 
 using namespace flyd;
 //using namespace muduo;
@@ -65,7 +66,28 @@ CSocekt::~CSocekt()
     if(m_pconnections != NULL)//释放连接池
         delete [] m_pconnections;
 
+    //将接收消息队列中的内容释放
+    clearMsgRecvQueue();
+
 }
+
+//各种清理函数--------------------------------------
+//清理接收消息队列，注意这个函数的写法
+void CSocekt::clearMsgRecvQueue()
+{
+    char* sTmpMempoint;
+    CMemory *p_memory = CMemory::GetInstance();
+
+    //临界与否，日后再考虑，当前先不考虑，，，，将来有线程池再考虑临界问题
+
+    while(!m_MsgRecvQueue.empty())
+    {
+        sTmpMempoint = m_MsgRecvQueue.front();
+        m_MsgRecvQueue.pop_front();
+        p_memory->FreeMemory(sTmpMempoint);
+    }
+}
+
 
 //初始化函数【fork()子进程之前干这个事】
 //成功返回true，失败返回false

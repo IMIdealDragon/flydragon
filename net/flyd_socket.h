@@ -134,6 +134,7 @@ private:
     void flyd_wait_request_handler_proc_plast(lp_connection_t c);
     void inMsgRecvQueue(char *buf); //buf这段内存 ： 消息头 + 包头 + 包体
     void tmpoutMsgRecvQueue();
+    void clearMsgRecvQueue();
 
 
     void flyd_close_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】

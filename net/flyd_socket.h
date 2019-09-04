@@ -16,6 +16,7 @@
 #include <semaphore.h>
 #include <atomic>
 #include <list>
+#include "logging/Mutex.h"
 
 #define FLYD_LISTEN_BACKLOG 511  //已完成连接队列数目
 #define FLYD_MAX_EVENTS     512  //最大连接数
@@ -132,9 +133,11 @@ private:
 
     void flyd_wait_request_handler_proc_p1(lp_connection_t c);
     void flyd_wait_request_handler_proc_plast(lp_connection_t c);
-    void inMsgRecvQueue(char *buf); //buf这段内存 ： 消息头 + 包头 + 包体
+    void inMsgRecvQueue(char *buf, int &imrqc); //buf这段内存 ： 消息头 + 包头 + 包体
     void tmpoutMsgRecvQueue();
     void clearMsgRecvQueue();
+
+    void threadRecvFunc(char *pMsgBuf);
 
 
     void flyd_close_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
@@ -169,7 +172,11 @@ private:
     size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
     size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
 
-    std::list<char *>              m_MsgRecvQueue;                     //接收数据消息队列
+    std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
+    int                            m_iRecvMsgQueueCount;    //收消息队列大小        
+    //多线程相关
+    //pthread_mutex_t                m_recvMessageQueueMutex;           //收消息队列互斥量
+    muduo::MutexLock               m_recvMessageQueueMutex;           
 };
 
 

@@ -13,6 +13,9 @@
 
 #include "flyd_socket.h"
 #include "../logging/Logging.h"
+#include "../logging/Mutex.h"
+#include "../_include/flyd_global.h"
+#include "../logging/CurrentThread.h"
 
 //来数据时候的处理，当连接上有数据来的时候，本函数会被ngx_epoll_process_events()所调用
 // ,官方的类似函数为ngx_http_wait_request_handler();
@@ -227,13 +230,23 @@ void CSocekt::flyd_wait_request_handler_proc_p1(lp_connection_t c)
 
 }
 
-
+void print()
+{
+    LOG_INFO << "开始执行任务...";
+    LOG_INFO << "tid = " << muduo::CurrentThread::tid();
+    LOG_INFO <<"任务执行结束...";
+}
 //收到一个完整包后的处理【plast表示最后阶段】，放到一个函数中，方便调用
 void CSocekt::flyd_wait_request_handler_proc_plast(lp_connection_t c)
 {
     //把这段内存放到消息队列中来；
-    inMsgRecvQueue(c->pnewMemPointer);
+   // inMsgRecvQueue(c->pnewMemPointer);
     //......这里可能考虑触发业务逻辑，怎么触发业务逻辑，这个代码以后再考虑扩充。。。。。。
+
+    int irmqc = 0; //表示消息队列当前信息数量
+    inMsgRecvQueue(c->pnewMemPointer, irmqc);
+
+    g_threadpool.run(print);
 
     c->ifnewrecvMem    = false;            //内存不再需要释放，因为你收完整了包，这个包被上边调用inMsgRecvQueue()移入消息队列，那么释放内存就属于业务逻辑去干，不需要回收连接到连接池中干了
     c->pnewMemPointer  = NULL;
@@ -245,10 +258,15 @@ void CSocekt::flyd_wait_request_handler_proc_plast(lp_connection_t c)
 
 //---------------------------------------------------------------
 //当收到一个完整包之后，将完整包入消息队列，这个包在服务器端应该是 消息头+包头+包体 格式
-void CSocekt::inMsgRecvQueue(char *buf) //buf这段内存 ： 消息头 + 包头 + 包体
+void CSocekt::inMsgRecvQueue(char *buf, int &imrqc) //buf这段内存 ： 消息头 + 包头 + 包体
 {
+    muduo::MutexLockGuard lock(m_recvMessageQueueMutex);
     m_MsgRecvQueue.push_back(buf);
 
+    ++m_iRecvMsgQueueCount;
+
+    imrqc = m_iRecvMsgQueueCount;
+    
     //....其他功能待扩充，这里要记住一点，这里的内存都是要释放的，否则。。。。。。。。。。日后增加释放这些内存的代码
     //...而且逻辑处理应该要引入多线程，所以这里要考虑临界问题
     //....
@@ -284,4 +302,13 @@ void CSocekt::tmpoutMsgRecvQueue()
         p_memory->FreeMemory(sTmpMsgBuf);         //先释放掉把；
     }
     return;
+}
+
+
+//消息处理线程主函数，专门处理各种接收到的TCP消息
+//pMsgBuf:发送过来的消息缓冲区，消息本身是自解释的，通过包头可以计算整个包长，
+
+void CSocekt::threadRecvFunc(char *pMsgBuf)
+{
+    return ;
 }

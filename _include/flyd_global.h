@@ -5,7 +5,10 @@
 #ifndef FLYDRAGON_FLYD_GLOBAL_H
 #define FLYDRAGON_FLYD_GLOBAL_H
 
+#include "logging/ThreadPool.h"
+
 extern FILE* g_filep;
+extern muduo::ThreadPool g_threadpool;
 
 //定义进程类型的标志位
 enum Flyd_Process

@@ -9,14 +9,21 @@
 #include "flyd_singleton.h"
 #include "proc/flyd_process.h"
 #include "net/flyd_socket.h"
+#include "logging/ThreadPool.h"
 
 using namespace flyd;
+using namespace muduo;
 //进程相关变量
 pid_t flyd_pid, flyd_parent;
 Flyd_Process flyd_process;
 
 //日志相关变量
 FILE* g_filep;
+
+//socket相关
+CSocekt g_socket;               //socket全局对象
+ThreadPool g_threadpool;
+
 
 void dummyOutput(const char* msg, int len)
 {
@@ -31,8 +38,7 @@ void dummyFlush()
     fflush(g_filep);
 }
 
-//socket相关
-CSocekt g_socket;               //socket全局对象
+
 
 int main(int argc, char **argv)
 {

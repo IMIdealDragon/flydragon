@@ -30,7 +30,7 @@ using namespace flyd;
 CSocekt::CSocekt() : m_worker_connections(1), m_ListenPortCount(1),
                     m_epollhandle(-1), m_pconnections(NULL),
                     m_pfree_connections(NULL),m_iLenPkgHeader(sizeof(COMM_PKG_HEADER)),
-                    m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER))
+                    m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER)), m_iRecvMsgQueueCount(0)
 {
     //配置相关
 //    m_worker_connections = 1;    //epoll连接最大项数

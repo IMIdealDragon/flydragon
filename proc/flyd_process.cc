@@ -14,6 +14,9 @@
 #include "flyd_global.h"
 #include "flyd_func.h"
 #include "logging/Logging.h"
+#include "flyd_global.h"
+
+//using namespace muduo;
 
 char* mater_name = "flyd_master";
 extern pid_t flyd_pid, flyd_parent;
@@ -201,6 +204,8 @@ static void flyd_worker_process_cycle(int inum, const char *pprocname) {
             flyd_process_events_and_timers(); //处理网络事件和定时器事件
         } //end for(;;)
 
+        //进程循环结束的话，同时结束线程池
+        g_threadpool.stop();
 
     }
 
@@ -214,6 +219,8 @@ static void flyd_worker_process_cycle(int inum, const char *pprocname) {
         {
             LOG_ERROR << "ngx_worker_process_init()中sigprocmask()失败!";
         }
+
+        g_threadpool.start(5);
 
         g_socket.flyd_epoll_init();
     }

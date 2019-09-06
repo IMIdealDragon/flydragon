@@ -7,9 +7,9 @@
 #include <errno.h>     //errno
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <functional>
 #include "misc/flyd_memory.h"
 #include "flyd_socket.h"
-
 
 #include "flyd_socket.h"
 #include "../logging/Logging.h"
@@ -246,7 +246,10 @@ void CSocekt::flyd_wait_request_handler_proc_plast(lp_connection_t c)
     int irmqc = 0; //表示消息队列当前信息数量
     inMsgRecvQueue(c->pnewMemPointer, irmqc);
 
-    g_threadpool.run(print);
+    std::function<void ()> tCall = std::bind(&CLogicSocket::threadRecvProcFunc,
+                                            &g_socket);
+
+    g_threadpool.run(tCall);
 
     c->ifnewrecvMem    = false;            //内存不再需要释放，因为你收完整了包，这个包被上边调用inMsgRecvQueue()移入消息队列，那么释放内存就属于业务逻辑去干，不需要回收连接到连接池中干了
     c->pnewMemPointer  = NULL;
@@ -308,7 +311,8 @@ void CSocekt::tmpoutMsgRecvQueue()
 //消息处理线程主函数，专门处理各种接收到的TCP消息
 //pMsgBuf:发送过来的消息缓冲区，消息本身是自解释的，通过包头可以计算整个包长，
 
-void CSocekt::threadRecvFunc(char *pMsgBuf)
+void CSocekt::threadRecvFunc()
 {
+    LOG_INFO << "调用父类的回调函数";
     return ;
 }

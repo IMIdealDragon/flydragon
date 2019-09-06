@@ -66,26 +66,6 @@ CSocekt::~CSocekt()
     if(m_pconnections != NULL)//释放连接池
         delete [] m_pconnections;
 
-    //将接收消息队列中的内容释放
-    clearMsgRecvQueue();
-
-}
-
-//各种清理函数--------------------------------------
-//清理接收消息队列，注意这个函数的写法
-void CSocekt::clearMsgRecvQueue()
-{
-    char* sTmpMempoint;
-    CMemory *p_memory = CMemory::GetInstance();
-
-    //临界与否，日后再考虑，当前先不考虑，，，，将来有线程池再考虑临界问题
-
-    while(!m_MsgRecvQueue.empty())
-    {
-        sTmpMempoint = m_MsgRecvQueue.front();
-        m_MsgRecvQueue.pop_front();
-        p_memory->FreeMemory(sTmpMempoint);
-    }
 }
 
 
@@ -388,7 +368,7 @@ int CSocekt::flyd_epoll_add_event(int fd,
     //比如c是个地址，可能的值是 0x00af0578，对应的二进制是‭101011110000010101111000‬，而 | 1后是0x00af0579
     ev.data.ptr = (void *)( (uintptr_t)c | c->instance);   //把对象弄进去，后续来事件时，用epoll_wait()后，这个对象能取出来用
     //但同时把一个 标志位【不是0就是1】弄进去
-    ev.events = EPOLLIN|EPOLLRDHUP;
+    ev.events = EPOLLIN | EPOLLRDHUP;
     if(epoll_ctl(m_epollhandle,eventtype,fd,&ev) == -1)
     {
         LOG_FATAL << "CSocekt::ngx_epoll_add_event()中epoll_ctl失败.";
@@ -520,7 +500,7 @@ int CSocekt::flyd_epoll_process_events(int timer)
             //....待扩展
 
            // ngx_log_stderr(errno,"111111111111111111111111111111.");
-           LOG_ERROR << "SDDS" ;
+           LOG_ERROR << "出现写事件" ;
 
         }
     } //end for(int i = 0; i < events; ++i)

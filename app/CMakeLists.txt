@@ -25,6 +25,8 @@ set(MAIN_SRC
         ../net/flyd_socket_conn.cc
         ../net/flyd_socket_inet.cc
         ../net/flyd_socket_request.cc
-        ../misc/flyd_memory.cc )
+        ../misc/flyd_memory.cc 
+        ../misc/flyd_crc32.cc
+        ../logic/flyd_logic.cc)
 add_executable(flydragonxxxxx ${MAIN_SRC} ${BASE_SRC})
 target_link_libraries(flydragonxxxxx pthread rt)

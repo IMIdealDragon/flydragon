@@ -10,6 +10,9 @@
 #include "proc/flyd_process.h"
 #include "net/flyd_socket.h"
 #include "logging/ThreadPool.h"
+#include "../logic/flyd_logic.h"
+#include "../misc/flyd_memory.h"
+#include "../misc/flyd_crc32.h"
 
 using namespace flyd;
 using namespace muduo;
@@ -21,7 +24,8 @@ Flyd_Process flyd_process;
 FILE* g_filep;
 
 //socket相关
-CSocekt g_socket;               //socket全局对象
+//CSocekt g_socket;               //socket全局对象
+CLogicSocket g_socket;
 ThreadPool g_threadpool;
 
 
@@ -58,6 +62,12 @@ int main(int argc, char **argv)
     {
         LOG_FATAL<<"配置文件读取失败，退出！\n";
     }
+
+    //内存单例类
+    CMemory::GetInstance();
+
+    //CRC校验算法单例类
+    CCRC32::GetInstance();
 
     //得到监听端口号
     int port = Singleton<Config>::getInstance().GetIntDefault("ListenPort", 0);

@@ -11,12 +11,12 @@
 #include <vector>
 #include <sys/epoll.h>
 #include <sys/socket.h>
-#include <flyd_comm.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <atomic>
 #include <list>
-#include "logging/Mutex.h"
+#include "../logging/Mutex.h"
+#include "../_include/flyd_comm.h"
 
 #define FLYD_LISTEN_BACKLOG 511  //已完成连接队列数目
 #define FLYD_MAX_EVENTS     512  //最大连接数
@@ -137,7 +137,8 @@ private:
     void tmpoutMsgRecvQueue();
     void clearMsgRecvQueue();
 
-    void threadRecvFunc(char *pMsgBuf);
+    virtual void threadRecvFunc();
+    //virtual void threadRecvProcFunc() = 0;
 
 
     void flyd_close_connection(lp_connection_t c);          //用户连入，我们accept4()时，得到的socket在处理中产生失败，则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
@@ -148,6 +149,12 @@ private:
     //连接池 或 连接 相关
     lp_connection_t flyd_get_connection(int isock);                  //从连接池中获取一个空闲连接
     void flyd_free_connection(lp_connection_t c);                    //归还参数c所代表的连接到到连接池中
+
+protected:
+    //和通讯相关的一些变量
+    size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
+    size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
+    std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
 
 private:
     int                            m_worker_connections;               //epoll连接的最大项数
@@ -168,11 +175,9 @@ private:
 
     struct epoll_event             m_events[FLYD_MAX_EVENTS];           //用于在epoll_wait()中承载返回的所发生的事件
 
-    //和通讯相关的一些变量
-    size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
-    size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
 
-    std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
+
+  //  std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
     int                            m_iRecvMsgQueueCount;    //收消息队列大小        
     //多线程相关
     //pthread_mutex_t                m_recvMessageQueueMutex;           //收消息队列互斥量

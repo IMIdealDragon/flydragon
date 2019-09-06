@@ -6,9 +6,11 @@
 #define FLYDRAGON_FLYD_GLOBAL_H
 
 #include "logging/ThreadPool.h"
+#include "../logic/flyd_logic.h"
 
 extern FILE* g_filep;
 extern muduo::ThreadPool g_threadpool;
+extern CLogicSocket g_socket;
 
 //定义进程类型的标志位
 enum Flyd_Process

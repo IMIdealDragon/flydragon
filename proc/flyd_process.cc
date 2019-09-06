@@ -10,17 +10,15 @@
 #include "flyd_process.h"
 #include <sys/prctl.h>
 #include <signal.h>
-#include <net/flyd_socket.h>
-#include "flyd_global.h"
-#include "flyd_func.h"
-#include "logging/Logging.h"
-#include "flyd_global.h"
+#include "../net/flyd_socket.h"
+#include "../_include/flyd_func.h"
+#include "../logging/Logging.h"
+#include "../_include/flyd_global.h"
 
 //using namespace muduo;
 
 char* mater_name = "flyd_master";
 extern pid_t flyd_pid, flyd_parent;
-extern CSocekt g_socket;               //socket全局对象
 
 
 namespace flyd {

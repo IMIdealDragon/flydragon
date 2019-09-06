@@ -12,8 +12,9 @@
 
 #include <flyd_func.h>
 #include <net/flyd_socket.h>
+#include "../_include/flyd_global.h"
 
-extern CSocekt g_socket;
+
 
 //处理网络事件和定时器事件，我们遵照nginx引入这个同名函数
 void flyd_process_events_and_timers()

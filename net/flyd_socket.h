@@ -127,6 +127,7 @@ public:
     //epoll增加事件
     int  flyd_epoll_process_events(int timer);                          //epoll等待接收和处理事件
 
+   
 
     void msgSend(char *psendbuf);
     //初始化连接池
@@ -150,7 +151,9 @@ private:
     void flyd_event_accept(lp_connection_t oldc);                    //建立新连接
     void flyd_wait_request_handler(lp_connection_t c);               //设置数据来时的读处理函数
     ssize_t recvproc(lp_connection_t pConn,char *buff,ssize_t buflen); //接收从客户端来的数据专用函数
-
+    
+    ssize_t sendproc(lp_connection_t c,char *buff,ssize_t size);
+    void flyd_write_request_handler(lp_connection_t pConn);
     void flyd_wait_request_handler_proc_p1(lp_connection_t c);
     void flyd_wait_request_handler_proc_plast(lp_connection_t c);
     void inMsgRecvQueue(char *buf, int &imrqc); //buf这段内存 ： 消息头 + 包头 + 包体

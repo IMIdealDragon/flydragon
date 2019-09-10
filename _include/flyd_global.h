@@ -11,6 +11,7 @@
 extern FILE* g_filep;
 extern muduo::ThreadPool g_threadpool;
 extern CLogicSocket g_socket;
+extern int g_stopEvent;
 
 //定义进程类型的标志位
 enum Flyd_Process

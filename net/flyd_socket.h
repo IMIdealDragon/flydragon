@@ -16,6 +16,7 @@
 #include <atomic>
 #include <list>
 #include "../logging/Mutex.h"
+#include "../logging/Atomic.h"
 #include "../_include/flyd_comm.h"
 
 #define FLYD_LISTEN_BACKLOG 511  //已完成连接队列数目
@@ -40,6 +41,10 @@ struct flyd_listening_s  //和监听端口有关的结构
 //连接结构体具体定义
 struct flyd_connection_s
 {
+    flyd_connection_s();
+    virtual ~flyd_connection_s();
+    void GetOneToUse();
+    void PutOneToFree();
 
     int                       fd;             //套接字句柄socket
     lp_listening_t            listening;      //如果这个链接被分配给了一个监听套接字，那么这个里边就指向监听套接字对应的那个lpngx_listening_t的内存首地址
@@ -74,11 +79,11 @@ struct flyd_connection_s
     char                      *pnewMemPointer;   //new出来的用于收包的内存首地址，和ifnewrecvMem配对使用
 
 
-    pthread_mutex_t             logicProcMutex;       //逻辑处理的相关互斥量
+    pthread_mutex_t             logicPorcMutex;       //逻辑处理的相关互斥量
 
     //发包有关
-    std::atomic<int>            iThrowsendCount;
-    char                        *psendMenPointer;//发送完成后释放用的，整个数据的头指针，其实是 消息头 + 包头 + 包体
+    muduo::AtomicInt32          iThrowsendCount;
+    char                        *psendMemPointer;//发送完成后释放用的，整个数据的头指针，其实是 消息头 + 包头 + 包体
     char                        *psendbuf;     //发送数据的缓冲区的头指针，开始 其实是包头+包体
     unsigned int               isendlen;      //要发送多少数据
 
@@ -91,7 +96,7 @@ struct flyd_connection_s
     //和网络安全相关
     uint64_t                    FloodkickLastTime;  //Flood攻击上次收到包的时间
     int                         FloodAttackCount;  //Flood攻击在该时间内收到包的次数统计
-    std::atomic<int>            iSendCount;     //发送队列中有的数据条目数，若client只发不收，则可能造成此数过大，依据此数做出踢出处理
+    muduo::AtomicInt32          iSendCount;     //发送队列中有的数据条目数，若client只发不收，则可能造成此数过大，依据此数做出踢出处理
 
 
 };
@@ -112,19 +117,34 @@ public:
     virtual ~CSocekt();                                                //释放函数
 public:
     virtual bool Initialize(); //这竟然是个虚函数                                        //初始化函数
-
+    virtual bool Initialize_subproc();
+    virtual void Shutdown_subproc();
 public:
     int  flyd_epoll_init();                                             //epoll功能初始化
     //void ngx_epoll_listenportstart();                                  //监听端口开始工作
     int  flyd_epoll_add_event(int fd,int readevent,int writeevent,uint32_t otherflag,uint32_t eventtype,lp_connection_t c);
+    int  flyd_epoll_oper_event(int fd,uint32_t eventtype, uint32_t flag,int bcaction,lp_connection_t pConn);       
     //epoll增加事件
     int  flyd_epoll_process_events(int timer);                          //epoll等待接收和处理事件
 
+
+    void msgSend(char *psendbuf);
+    //初始化连接池
+    void initconnection();
+    void clearconnection();//清理连接池
+    void inRecyConnectQueue(lp_connection_t pConn);
+
+    static void* ServerSendQueueThread(void* threadData);
+    static void* ServerRecyConnectionThread(void* threadData);
+
 private:
+    
+
     void ReadConf();                                                   //专门用于读各种配置项
     bool flyd_open_listening_sockets();                                 //监听必须的端口【支持多个端口】
     void flyd_close_listening_sockets();                                //关闭监听套接字
     bool setnonblocking(int sockfd);                                   //设置非阻塞套接字
+    void clearMsgSendQueue();
 
     //一些业务处理函数handler
     void flyd_event_accept(lp_connection_t oldc);                    //建立新连接
@@ -155,33 +175,51 @@ protected:
     size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
     size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
     std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
+    muduo::AtomicInt32             m_iRecvMsgQueueCount;    //收消息队列大小 
 
 private:
+   struct ThreadItem   
+    {
+        pthread_t   _Handle;                        //线程句柄
+        CSocekt     *_pThis;                        //记录线程池的指针	
+        bool        ifrunning;                      //标记是否正式启动起来，启动起来后，才允许调用StopAll()来释放
+
+        //构造函数
+        ThreadItem(CSocekt *pthis):_pThis(pthis),ifrunning(false){}                             
+        //析构函数
+        ~ThreadItem(){}        
+    };
+
     int                            m_worker_connections;               //epoll连接的最大项数
     int                            m_ListenPortCount;                  //所监听的端口数量
     int                            m_epollhandle;                      //epoll_create返回的句柄
 
     //和连接池有关的
-    lp_connection_t             m_pconnections;                  //注意这里可是个指针，其实这是个连接池的首地址
-    lp_connection_t             m_pfree_connections;             //空闲连接链表头，连接池中总是有某些连接被占用，为了快速在池中找到一个空闲的连接，我把空闲的连接专门用该成员记录;
-    //【串成一串，其实这里指向的都是m_pconnections连接池里的没有被使用的成员】
-    //lp_event_t                   m_pread_events;                     //指针，读事件数组
-    //lp_event_t                   m_pwrite_events;                    //指针，写事件数组
-    int                            m_connection_n;                     //当前进程中所有连接对象的总数【连接池大小】
-    int                            m_free_connection_n;                //连接池中可用连接总数
+    std::list<lp_connection_t>     m_connectionList;      //连接列表
+    std::list<lp_connection_t>     m_freeconnectionList;  //空闲连接列表[这里边装的都是空闲连接]
+    muduo::AtomicInt32             m_total_connection_n;  //连接池总的连接数
+    muduo::AtomicInt32             m_free_connection_n;   //连接池空闲连接数
+    muduo::MutexLock               m_connectionMutex;     //连接相关互斥量
+    muduo::MutexLock               m_recyconnqueueMutex;  //连接回收队列相关的互斥量
+    std::list<lp_connection_t>     m_recyconnectionList;  //将要释放的连接队列，这是为了延迟一段时间再释放
+    muduo::AtomicInt32             m_total_recyconnection_n; //将要释放的队列的连接的大小
+    int                            m_RecyConnectionWaitTime;  //等待这些秒后才回收
 
 
-    std::vector<lp_listening_t> m_ListenSocketList;                 //监听套接字队列
+    std::vector<lp_listening_t>    m_ListenSocketList;                 //监听套接字队列
 
     struct epoll_event             m_events[FLYD_MAX_EVENTS];           //用于在epoll_wait()中承载返回的所发生的事件
 
 
+   
+    std::list<char*>               m_MsgSendQueue;            //发消息队列
+    muduo::AtomicInt32             m_iSendMsgQueueCount;       //发送数据消息队列大小
+    muduo::MutexLock               m_sendMessageQueueMutex;    //发消息队列锁变量
 
-  //  std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
-    int                            m_iRecvMsgQueueCount;    //收消息队列大小        
-    //多线程相关
-    //pthread_mutex_t                m_recvMessageQueueMutex;           //收消息队列互斥量
-    muduo::MutexLock               m_recvMessageQueueMutex;           
+    muduo::MutexLock               m_recvMessageQueueMutex;          
+    sem_t                          m_semEventSendQueue;        //处理发消息线程的信号量
+    std::vector<ThreadItem *>      m_threadVector;
+
 };
 
 

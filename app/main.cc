@@ -19,6 +19,8 @@ using namespace muduo;
 //进程相关变量
 pid_t flyd_pid, flyd_parent;
 Flyd_Process flyd_process;
+int          g_stopEvent;
+
 
 //日志相关变量
 FILE* g_filep;
@@ -46,6 +48,8 @@ void dummyFlush()
 
 int main(int argc, char **argv)
 {
+    //0表示不退出
+    g_stopEvent = 0;
 
     g_filep = ::fopen("../flyd_log", "ae");
     if(!g_filep)

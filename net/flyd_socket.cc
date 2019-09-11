@@ -30,7 +30,7 @@ using namespace flyd;
 //构造函数
 CSocekt::CSocekt() : m_worker_connections(1), m_ListenPortCount(1),
                     m_epollhandle(-1), m_iLenPkgHeader(sizeof(COMM_PKG_HEADER)),
-                    m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER)), m_iRecvMsgQueueCount(0),
+                    m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER)),
                     m_RecyConnectionWaitTime(60)
 {
     //配置相关
@@ -45,6 +45,7 @@ CSocekt::CSocekt() : m_worker_connections(1), m_ListenPortCount(1),
 //    //m_pwrite_events = NULL;      //写事件数组给空
       m_iSendMsgQueueCount.getAndSet(0);
       m_total_recyconnection_n.getAndSet(0);
+      m_RecyConnectionWaitTime = 60;
 }
 
 //析构函数
@@ -596,7 +597,7 @@ int CSocekt::flyd_epoll_process_events(int timer)
                 //ngx_log_stderr(errno,"CSocekt::ngx_epoll_process_events()中revents&EPOLLOUT成立并且revents & (EPOLLERR|EPOLLHUP|EPOLLRDHUP)成立,event=%ud。",revents); 
 
                 //我们只有投递了 写事件，但对端断开时，程序流程才走到这里，投递了写事件意味着 iThrowsendCount标记肯定被+1了，这里我们减回阿里
-                p_Conn->iThrowsendCount.decrement;                 
+                p_Conn->iThrowsendCount.decrement();                 
             }
             else
             {

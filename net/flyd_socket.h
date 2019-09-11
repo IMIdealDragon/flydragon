@@ -122,7 +122,7 @@ public:
 public:
     int  flyd_epoll_init();                                             //epoll功能初始化
     //void ngx_epoll_listenportstart();                                  //监听端口开始工作
-    int  flyd_epoll_add_event(int fd,int readevent,int writeevent,uint32_t otherflag,uint32_t eventtype,lp_connection_t c);
+  //  int  flyd_epoll_add_event(int fd,int readevent,int writeevent,uint32_t otherflag,uint32_t eventtype,lp_connection_t c);
     int  flyd_epoll_oper_event(int fd,uint32_t eventtype, uint32_t flag,int bcaction,lp_connection_t pConn);       
     //epoll增加事件
     int  flyd_epoll_process_events(int timer);                          //epoll等待接收和处理事件

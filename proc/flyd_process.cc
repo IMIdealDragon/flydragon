@@ -204,6 +204,7 @@ static void flyd_worker_process_cycle(int inum, const char *pprocname) {
 
         //进程循环结束的话，同时结束线程池
         g_threadpool.stop();
+        g_socket.Shutdown_subproc();
 
     }
 
@@ -218,7 +219,13 @@ static void flyd_worker_process_cycle(int inum, const char *pprocname) {
             LOG_ERROR << "ngx_worker_process_init()中sigprocmask()失败!";
         }
 
+        //线程池代码，率先创建，至少要比和socket相关的内容优先
         g_threadpool.start(5);
+
+        if(g_socket.Initialize_subproc() == false) //初始化子进程需要具备的一些多线程能力相关的问题
+        {
+            LOG_FATAL << "子进程初始化失败";
+        }
 
         g_socket.flyd_epoll_init();
     }

@@ -140,16 +140,18 @@ void CSocekt::flyd_event_accept(lp_connection_t oldc)
             }
         }
 
+
         newc->listening = oldc->listening;                    //连接对象 和监听对象关联，方便通过连接对象找监听对象【关联到监听端口】
         newc->w_ready = 1;                                    //标记可以写，新连接写事件肯定是ready的；【从连接池拿出一个连接时这个连接的所有成员都是0】
-        newc->rhandler = &CSocekt::flyd_wait_request_handler;  //设置数据来时的读处理函数，其实官方nginx中是ngx_http_wait_request_handler()
-        //客户端应该主动发送第一次的数据，这里将读事件加入epoll监控
-        if(flyd_epoll_add_event(s,                 //socket句柄
-                               1,0,              //读，写
-                               0,    //其他补充标记【EPOLLET(边缘触发ET)，0表示这里采用LT模式】
-                               EPOLL_CTL_ADD,    //事件类型【增加，还有删除/修改】
-                               newc              //连接池中的连接
-        ) == -1)
+        newc->rhandler = &CSocekt::flyd_wait_request_handler;  //设置数据来时的读处理函数，其实官方nginx中是ngx_http_wait_request_handler()   
+        newc->whandler = &CSocekt::flyd_write_request_handler; //设置数据发送时的写处理函数。 //客户端应该主动发送第一次的数据，这里将读事件加入epoll监控
+        if(flyd_epoll_oper_event(
+                                s,                  //socekt句柄
+                                EPOLL_CTL_ADD,      //事件类型，这里是增加
+                                EPOLLIN|EPOLLRDHUP, //标志，这里代表要增加的标志,EPOLLIN：可读，EPOLLRDHUP：TCP连接的远端关闭或者半关闭 ，如果边缘触发模式可以增加 EPOLLET
+                                0,                  //对于事件类型为增加的，不需要这个参数
+                                newc                //连接池中的连接
+                                ) == -1)         
         {
             //增加事件失败，失败日志在ngx_epoll_add_event中写过了，因此这里不多写啥；
             flyd_close_connection(newc);

@@ -695,7 +695,7 @@ void* CSocekt::ServerSendQueueThread(void* threadData)
 	                //优点：数据不多的时候，可以避免epoll的写事件的增加/删除，提高了程序的执行效率；                         
                 //(1)直接调用write或者send发送数据
              //   ngx_log_stderr(errno,"即将发送数据%ud。",p_Conn->isendlen);
-                LOG_ERROR << "即将发送数据" << p_Conn->isendlen;
+                LOG_INFO << "即将发送数据" << p_Conn->isendlen;
 
                 sendsize = pSocketObj->sendproc(p_Conn,p_Conn->psendbuf,p_Conn->isendlen); //注意参数
                 if(sendsize > 0)
@@ -726,7 +726,7 @@ void* CSocekt::ServerSendQueueThread(void* threadData)
                             //有这情况发生？这可比较麻烦，不过先do nothing
                             LOG_ERROR << "CSocekt::ServerSendQueueThread()ngx_epoll_oper_event()失败.";
                         }
-                            LOG_ERROR << "CSocekt::ServerSendQueueThread()中数据没发送完毕【发送缓冲区满】，整个要发送"<<p_Conn->isendlen<< "实际发送了%d。" << sendsize;
+                            LOG_ERROR << "CSocekt::ServerSendQueueThread()中数据没发送完毕【发送缓冲区满】，整个要发送"<<p_Conn->isendlen << "字节， "<< "实际发送了" << sendsize;
 
                     } //end if(sendsize > 0)
                     continue;  //继续处理其他消息                    

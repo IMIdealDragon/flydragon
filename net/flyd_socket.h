@@ -79,7 +79,7 @@ struct flyd_connection_s
     char                      *pnewMemPointer;   //new出来的用于收包的内存首地址，和ifnewrecvMem配对使用
 
 
-    pthread_mutex_t             logicPorcMutex;       //逻辑处理的相关互斥量
+    muduo::MutexLock            logicPorcMutex;       //逻辑处理的相关互斥量
 
     //发包有关
     muduo::AtomicInt32          iThrowsendCount;
@@ -179,6 +179,7 @@ protected:
     size_t                         m_iLenMsgHeader;   //sizeof(STRUC_MSG_HEADER);
     std::list<char *>              m_MsgRecvQueue;          //接收数据消息队列
     muduo::AtomicInt32             m_iRecvMsgQueueCount;    //收消息队列大小 
+    muduo::MutexLock               m_pthreadMutex;
 
 private:
    struct ThreadItem   

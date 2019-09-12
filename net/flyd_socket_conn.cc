@@ -31,12 +31,12 @@
 flyd_connection_s::flyd_connection_s()//构造函数
 {		
     iCurrsequence = 0;    
-    pthread_mutex_init(&logicPorcMutex, NULL); //互斥量初始化
+    //pthread_mutex_init(&logicPorcMutex, NULL); //互斥量初始化
 }
 
 flyd_connection_s::~flyd_connection_s()//析构函数
 {
-    pthread_mutex_destroy(&logicPorcMutex);    //互斥量释放
+   // pthread_mutex_destroy(&logicPorcMutex);    //互斥量释放
 }
 
 //分配出去一个连接的时候初始化一些内容,原来内容放在 ngx_get_connection()里，现在放在这里

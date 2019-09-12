@@ -22,6 +22,8 @@
 #include "flyd_logic.h"
 #include "../logging/Logging.h"
 #include "../misc/flyd_crc32.h"
+#include "flyd_logic_comm.h"
+#include "../misc/flyd_memory.h"
 
 
 
@@ -76,8 +78,12 @@ bool CLogicSocket::Initialize()
 //pMsgBuf：消息头 + 包头 + 包体 ：自解释；
 void CLogicSocket::threadRecvProcFunc()
 {
-    LOG_INFO << "调用了子类的处理函数";      
+    LOG_INFO << "调用了子类的处理函数";    
+    muduo::MutexLockGuard lock(m_pthreadMutex);  
     char *pMsgBuf = m_MsgRecvQueue.front();
+    m_MsgRecvQueue.pop_front();
+    m_iRecvMsgQueueCount.decrement();
+    m_pthreadMutex.unlock();
     LPSTRUC_MSG_HEADER pMsgHeader = (LPSTRUC_MSG_HEADER)pMsgBuf;                  //消息头
     LPCOMM_PKG_HEADER  pPkgHeader = (LPCOMM_PKG_HEADER)(pMsgBuf + m_iLenMsgHeader); //包头
     void  *pPkgBody = NULL;                                                       //指向包体的指针
@@ -88,6 +94,7 @@ void CLogicSocket::threadRecvProcFunc()
         //没有包体，只有包头
 		if(pPkgHeader->crc32 != 0) //只有包头的crc值给0
 		{
+            LOG_INFO << "CRC校验错误，数据包丢弃";
 			return; //crc错，直接丢弃
 		}
 		pPkgBody = NULL;
@@ -136,6 +143,7 @@ void CLogicSocket::threadRecvProcFunc()
 
     //一切正确，可以放心大胆的处理了
     //(4)调用消息码对应的成员函数来处理
+    LOG_INFO << "消息解析正确，调用消息处理回调函数";
     (this->*statusHandler[imsgCode])(p_Conn,pMsgHeader,(char *)pPkgBody,pkglen-m_iLenPkgHeader);
     return;	
 }
@@ -145,6 +153,60 @@ void CLogicSocket::threadRecvProcFunc()
 bool CLogicSocket::_HandleRegister(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength)
 {
     LOG_INFO << "执行了CLogicSocket::_HandleRegister()!";
+     //(1)首先判断包体的合法性
+    if(pPkgBody == NULL) //具体看客户端服务器约定，如果约定这个命令[msgCode]必须带包体，那么如果不带包体，就认为是恶意包，直接不处理    
+    {        
+        return false;
+    }
+		    
+    int iRecvLen = sizeof(STRUCT_REGISTER); 
+    if(iRecvLen != iBodyLength) //发送过来的结构大小不对，认为是恶意包，直接不处理
+    {     
+        return false; 
+    }
+
+    //(2)对于同一个用户，可能同时发送来多个请求过来，造成多个线程同时为该 用户服务，比如以网游为例，用户要在商店中买A物品，又买B物品，而用户的钱 只够买A或者B，不够同时买A和B呢？
+       //那如果用户发送购买命令过来买了一次A，又买了一次B，如果是两个线程来执行同一个用户的这两次不同的购买命令，很可能造成这个用户购买成功了 A，又购买成功了 B
+       //所以，为了稳妥起见，针对某个用户的命令，我们一般都要互斥,我们需要增加临界的变量于ngx_connection_s结构中
+  //  CLock lock(&pConn->logicPorcMutex); //凡是和本用户有关的访问都互斥
+    muduo::MutexLockGuard  lock(pConn->logicPorcMutex);
+    
+    //(3)取得了整个发送过来的数据
+    LPSTRUCT_REGISTER p_RecvInfo = (LPSTRUCT_REGISTER)pPkgBody; 
+
+    //(4)这里可能要考虑 根据业务逻辑，进一步判断收到的数据的合法性，
+       //当前该玩家的状态是否适合收到这个数据等等【比如如果用户没登陆，它就不适合购买物品等等】
+        //这里大家自己发挥，自己根据业务需要来扩充代码，老师就不带着大家扩充了。。。。。。。。。。。。
+    //。。。。。。。。
+
+    //(5)给客户端返回数据时，一般也是返回一个结构，这个结构内容具体由客户端/服务器协商，这里我们就以给客户端也返回同样的 STRUCT_REGISTER 结构来举例    
+    //LPSTRUCT_REGISTER pFromPkgHeader =  (LPSTRUCT_REGISTER)(((char *)pMsgHeader)+m_iLenMsgHeader);	//指向收到的包的包头，其中数据后续可能要用到
+	LPCOMM_PKG_HEADER pPkgHeader;	
+	CMemory  *p_memory = CMemory::GetInstance();
+	CCRC32   *p_crc32 = CCRC32::GetInstance();
+    int iSendLen = sizeof(STRUCT_REGISTER);  
+    //a)分配要发送出去的包的内存
+
+    iSendLen = 65000; //unsigned最大也就是这个值
+    char *p_sendbuf = (char *)p_memory->AllocMemory(m_iLenMsgHeader+m_iLenPkgHeader+iSendLen,false);//准备发送的格式，这里是 消息头+包头+包体
+    //b)填充消息头
+    memcpy(p_sendbuf,pMsgHeader,m_iLenMsgHeader);                   //消息头直接拷贝到这里来
+    //c)填充包头
+    pPkgHeader = (LPCOMM_PKG_HEADER)(p_sendbuf+m_iLenMsgHeader);    //指向包头
+    pPkgHeader->msgCode = _CMD_REGISTER;	                        //消息代码，可以统一在ngx_logiccomm.h中定义
+    pPkgHeader->msgCode = htons(pPkgHeader->msgCode);	            //htons主机序转网络序 
+    pPkgHeader->pkgLen  = htons(m_iLenPkgHeader + iSendLen);        //整个包的尺寸【包头+包体尺寸】 
+    //d)填充包体
+    LPSTRUCT_REGISTER p_sendInfo = (LPSTRUCT_REGISTER)(p_sendbuf+m_iLenMsgHeader+m_iLenPkgHeader);	//跳过消息头，跳过包头，就是包体了
+    //。。。。。这里根据需要，填充要发回给客户端的内容,int类型要使用htonl()转，short类型要使用htons()转；
+    
+    //e)包体内容全部确定好后，计算包体的crc32值
+    pPkgHeader->crc32   = p_crc32->Get_CRC((unsigned char *)p_sendInfo,iSendLen);
+    pPkgHeader->crc32   = htonl(pPkgHeader->crc32);		
+
+    //f)发送数据包
+    msgSend(p_sendbuf);
+
     return true;
 }
 bool CLogicSocket::_HandleLogIn(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength)

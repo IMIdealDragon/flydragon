@@ -275,7 +275,7 @@ void CSocekt::inMsgRecvQueue(char *buf, int &imrqc) //buf这段内存 ： 消息
     //....
 
     //临时在这里调用一下该函数，以防止接收消息队列过大
-    tmpoutMsgRecvQueue();   //.....临时，后续会取消这行代码
+//    tmpoutMsgRecvQueue();   //.....临时，后续会取消这行代码
 
     //为了测试方便，因为本函数意味着收到了一个完整的数据包，所以这里打印一个信息
     LOG_INFO << "非常好，收到了一个完整的数据包【包头+包体】！";
@@ -363,7 +363,7 @@ ssize_t CSocekt::sendproc(lp_connection_t c,char *buff,ssize_t size)  //ssize_t�
 //设置数据发送时的写处理函数,当数据可写时epoll通知我们，我们在 int CSocekt::ngx_epoll_process_events(int timer)  中调用此函数
 //能走到这里，数据就是没法送完毕，要继续发送
 void CSocekt::flyd_write_request_handler(lp_connection_t pConn)
-{      
+{  
     CMemory *p_memory = CMemory::GetInstance();
     
     //这些代码的书写可以参照 void* CSocekt::ServerSendQueueThread(void* threadData)
@@ -398,7 +398,7 @@ void CSocekt::flyd_write_request_handler(lp_connection_t pConn)
             LOG_ERROR << "CSocekt::ngx_write_request_handler()时if(sendsize == -1)成立，这很怪异。";
         }    
 
-            LOG_ERROR << "CSocekt::ngx_write_request_handler()时if(sendsize != -1)成立。"  ;      
+            LOG_INFO << "flyd_write_request_handler数据发送完毕 ，很好！"  ;      
     }
 
     //能走下来的，要么数据发送完毕了，要么对端断开了，那么执行收尾工作吧；

@@ -44,6 +44,8 @@ void flyd_connection_s::GetOneToUse()
 {
     ++iCurrsequence;
 
+    fd = -1;
+
     curStat = _PKG_HD_INIT;                           //收包状态处于 初始状态，准备接收数据包头【状态机】
     precvbuf = dataHeadInfo;                          //收包我要先收到这里来，因为我要先收包头，所以收数据的buff直接就是dataHeadInfo
     irecvlen = sizeof(COMM_PKG_HEADER);               //这里指定收数据的长度，这里先要求收包头这么长字节的数据
@@ -52,6 +54,8 @@ void flyd_connection_s::GetOneToUse()
     iThrowsendCount.getAndSet(0);                              //原子的
     psendMemPointer = NULL;                           //发送数据头指针记录
     events          = 0;                              //epoll事件先给0 
+
+    lastPingTime    = time(NULL);                    //如果有数据发送过来也更新这个时间
 }
 
 //回收回来一个连接的时候做一些事
@@ -164,7 +168,22 @@ void CSocekt::inRecyConnectQueue(lp_connection_t pConn)
 {
     //ngx_log_stderr(0,"CSocekt::inRecyConnectQueue()执行，连接入到回收队列中.");
     
+  //  std::list<lp_connection_t>::iterator pos;
+    bool iffind = false;
     muduo::MutexLockGuard lock(m_recyconnqueueMutex); //针对连接回收列表的互斥量，因为线程ServerRecyConnectionThread()也有要用到这个回收列表；
+
+    //先检查一下这个连接之前在不在队列中，防止被重复添加
+    for(auto pos = m_recyconnectionList.begin(); pos != m_recyconnectionList.end(); pos++)
+    {
+        if((*pos) == pConn)
+        {
+            iffind = true;
+            break;
+        }
+    }
+
+    if(iffind == true)
+    return ;
 
     pConn->inRecyTime = time(NULL);        //记录回收时间
     ++pConn->iCurrsequence;
@@ -213,7 +232,7 @@ lblRRTD:
                 //....
 
                 //我认为，凡是到释放时间的，iThrowsendCount都应该为0；这里我们加点日志判断下
-                if(p_Conn->iThrowsendCount.get() != 0)
+                if(p_Conn->iThrowsendCount.get() > 0)
                 {
                     //这确实不应该，打印个日志吧；
                    // ngx_log_stderr(0,"CSocekt::ServerRecyConnectionThread()中到释放时间却发现p_Conn.iThrowsendCount!=0，这个不该发生");
@@ -267,15 +286,18 @@ lblRRTD:
 
 //用户连入，我们accept4()时，得到的socket在处理中产生失败，
 // 则资源用这个函数释放【因为这里涉及到好几个要释放的资源，所以写成函数】
-void CSocekt::flyd_close_connection(lp_connection_t c)
+void CSocekt::flyd_close_connection(lp_connection_t pConn)
 {
-    int fd = c->fd;
-    flyd_free_connection(c);
+   
+    flyd_free_connection(pConn);
    // c->fd = -1; //官方nginx这么写，但这有意义吗？
-    if(close(fd) == -1)
+    if(pConn->fd != -1)
     {
+        close(pConn->fd);
+        pConn->fd = -1;
         //ngx_log_error_core(NGX_LOG_ALERT,errno,"CSocekt::ngx_close_accepted_connection()中close(%d)失败!",fd);
-        LOG_ERROR << "CSocekt::ngx_close_accepted_connection()中close(%d)失败!";
+       // LOG_ERROR << "CSocekt::ngx_close_accepted_connection()中close(%d)失败!";
     }
+    
 
 }

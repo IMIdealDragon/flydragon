@@ -113,7 +113,8 @@ ssize_t CSocekt::recvproc(lp_connection_t c,char *buff,ssize_t buflen)  //ssize_
     {
         //客户端关闭【应该是正常完成了4次挥手】，我这边就直接回收连接连接，关闭socket即可
         LOG_INFO << "连接被客户端正常关闭[4路挥手关闭]！";
-        flyd_close_connection(c);
+        //flyd_close_connection(c);不再是直接关闭连接，而是先从时间队列中去除，再延迟关闭
+        zdClosesocketProc(c);
         return -1;
     }
     //客户端没断，走这里
@@ -159,7 +160,8 @@ ssize_t CSocekt::recvproc(lp_connection_t c,char *buff,ssize_t buflen)  //ssize_
         //ngx_log_stderr(0,"连接被客户端 非 正常关闭！");
 
         //这种真正的错误就要，直接关闭套接字，释放连接池中连接了
-        flyd_close_connection(c);
+       // flyd_close_connection(c);
+       zdClosesocketProc(c);
         return -1;
     }
 

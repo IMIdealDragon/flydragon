@@ -15,6 +15,7 @@
 #include <semaphore.h>
 #include <atomic>
 #include <list>
+#include <map>
 #include "../logging/Mutex.h"
 #include "../logging/Atomic.h"
 #include "../_include/flyd_comm.h"
@@ -129,7 +130,7 @@ public:
 
    
 
-    void msgSend(char *psendbuf);
+    
     //初始化连接池
     void initconnection();
     void clearconnection();//清理连接池
@@ -139,8 +140,6 @@ public:
     static void* ServerRecyConnectionThread(void* threadData);
 
 private:
-    
-
     void ReadConf();                                                   //专门用于读各种配置项
     bool flyd_open_listening_sockets();                                 //监听必须的端口【支持多个端口】
     void flyd_close_listening_sockets();                                //关闭监听套接字
@@ -173,6 +172,21 @@ private:
     lp_connection_t flyd_get_connection(int isock);                  //从连接池中获取一个空闲连接
     void flyd_free_connection(lp_connection_t c);                    //归还参数c所代表的连接到到连接池中
 
+
+    //心跳包相关代码
+    void AddToTimerQueue(lp_connection_t pConn);
+    time_t GetEarliestTime();
+    LPSTRUC_MSG_HEADER RemoveFirstTimer();
+    LPSTRUC_MSG_HEADER GetOverTimeTimer(time_t cur_time);
+    void DeleteFromTimerQueue(lp_connection_t pConn);
+    void clearAllFromTimerQueue();
+    static void* ServerTimerQueueMonitorThread(void* threadData);
+    virtual void procPingTimeOutChecking(LPSTRUC_MSG_HEADER tmpmsg,time_t cur_time);
+    
+protected:
+    void msgSend(char *psendbuf);
+    void zdClosesocketProc(lp_connection_t p_Conn);
+
 protected:
     //和通讯相关的一些变量
     size_t                         m_iLenPkgHeader;   //sizeof(COMM_PKG_HEADER);
@@ -181,6 +195,7 @@ protected:
     muduo::AtomicInt32             m_iRecvMsgQueueCount;    //收消息队列大小 
     muduo::MutexLock               m_pthreadMutex;
 
+    int                            m_iWaitTime;
 private:
    struct ThreadItem   
     {
@@ -224,6 +239,14 @@ private:
     sem_t                          m_semEventSendQueue;        //处理发消息线程的信号量
     std::vector<ThreadItem *>      m_threadVector;
 
+
+
+    //时间相关
+    int                            m_ifkickTimeCount;     //是否开启踢人时钟
+    muduo::MutexLock               m_timequeueMutex;      //和时间队列有关的互斥量
+    std::multimap<time_t, LPSTRUC_MSG_HEADER>     m_timerQueuemap; //时间队列
+    size_t                         m_cur_size_;          //时间队列的大小
+    time_t                         m_timer_value_;       //当前计数队列头部时间
 };
 
 

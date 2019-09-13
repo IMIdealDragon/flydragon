@@ -31,7 +31,8 @@ using namespace flyd;
 CSocekt::CSocekt() : m_worker_connections(1), m_ListenPortCount(1),
                     m_epollhandle(-1), m_iLenPkgHeader(sizeof(COMM_PKG_HEADER)),
                     m_iLenMsgHeader(sizeof(STRUC_MSG_HEADER)),
-                    m_RecyConnectionWaitTime(60)
+                    m_RecyConnectionWaitTime(60),m_cur_size_(0),
+                    m_timer_value_(0)
 {
     //配置相关
 //    m_worker_connections = 1;    //epoll连接最大项数
@@ -81,7 +82,12 @@ void CSocekt::ReadConf()
   //  m_worker_connections = p_config->GetIntDefault("worker_connections",m_worker_connections); //epoll连接的最大项数
   //  m_ListenPortCount    = p_config->GetIntDefault("ListenPortCount",m_ListenPortCount);       //取得要监听的端口数量
     m_ListenPortCount = Singleton<Config>::getInstance().GetIntDefault("ListenPortCount", 1);
-    LOG_DEBUG << "worker_connections = " << m_worker_connections << "ListenPortCount = " << m_ListenPortCount;
+    //LOG_DEBUG << "worker_connections = " << m_worker_connections << "ListenPortCount = " << m_ListenPortCount;
+
+    m_ifkickTimeCount   =  Singleton<Config>::getInstance().GetIntDefault("Sock_WaitTimeEnable", 0);
+    m_iWaitTime         =  Singleton<Config>::getInstance().GetIntDefault("Sock_MaxWaitTime", m_iWaitTime);
+    m_iWaitTime         =  (m_iWaitTime > 5) ? m_iWaitTime : 5;
+
 }
 
 
@@ -119,6 +125,19 @@ bool CSocekt::Initialize_subproc()
     {
         return false;
     }
+
+    if(m_ifkickTimeCount == 1)  //是否开启踢人时钟，1：开启   0：不开启
+    {
+        ThreadItem *pTimemonitor;    //专门用来处理到期不发心跳包的用户踢出的线程
+        m_threadVector.push_back(pTimemonitor = new ThreadItem(this)); 
+        err = pthread_create(&pTimemonitor->_Handle, NULL, ServerTimerQueueMonitorThread,pTimemonitor);
+        if(err != 0)
+        {
+            LOG_ERROR << "CSocekt::Initialize_subproc()中pthread_create(ServerTimerQueueMonitorThread)失败.";
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -148,6 +167,7 @@ void CSocekt::Shutdown_subproc()
     //(3)队列相关
     clearMsgSendQueue();
     clearconnection();
+    clearAllFromTimerQueue();
     
     //(4)多线程相关    
     sem_destroy(&m_semEventSendQueue);                  //发消息相关线程信号量释放
@@ -317,6 +337,29 @@ void CSocekt::msgSend(char *psendbuf)
         LOG_ERROR << "CSocekt::msgSend()中sem_post(&m_semEventSendQueue)失败.";
    
     }
+    return;
+}
+
+
+
+//主动关闭一个连接要做的善后处理
+//主动关闭一个连接时的要做些善后的处理函数
+void CSocekt::zdClosesocketProc(lp_connection_t p_Conn)
+{
+    if(m_ifkickTimeCount == 1)
+    {
+        DeleteFromTimerQueue(p_Conn); //从时间队列中把连接干掉
+    }
+    if(p_Conn->fd != -1)
+    {   
+        close(p_Conn->fd); //这个socket关闭，关闭后epoll就会被从红黑树中删除，所以这之后无法收到任何epoll事件
+        p_Conn->fd = -1;
+    }
+
+    if(p_Conn->iThrowsendCount.get() > 0)  
+        p_Conn->iThrowsendCount.decrement();   //归0
+
+    inRecyConnectQueue(p_Conn);
     return;
 }
 

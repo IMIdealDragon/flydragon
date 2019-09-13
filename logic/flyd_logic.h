@@ -18,6 +18,11 @@ public:
 	//各种业务逻辑相关函数都在这里
 	bool _HandleRegister(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength);
 	bool _HandleLogIn(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength);
+	bool _HandlePing(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength);
+
+	//发送只有包头的数据包
+	void SendNoBodyPkgToClient(LPSTRUC_MSG_HEADER pMsgHeader, unsigned short iMsgCode);
+    virtual void procPingTimeOutChecking(LPSTRUC_MSG_HEADER tmpmsg,time_t cur_time);
 
 public:
 	virtual void threadRecvProcFunc();

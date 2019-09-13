@@ -24,6 +24,7 @@
 #include "../misc/flyd_crc32.h"
 #include "flyd_logic_comm.h"
 #include "../misc/flyd_memory.h"
+#include "../net/flyd_socket.h"
 
 
 
@@ -37,7 +38,7 @@ typedef bool (CLogicSocket::*handler)(  lp_connection_t pConn,      //连接池�
 static const handler statusHandler[] = 
 {
     //数组前5个元素，保留，以备将来增加一些基本服务器功能
-    NULL,                                                   //【0】：下标从0开始
+    &CLogicSocket::_HandlePing,                                                   //【0】：心跳包处理回调函数
     NULL,                                                   //【1】：下标从0开始
     NULL,                                                   //【2】：下标从0开始
     NULL,                                                   //【3】：下标从0开始
@@ -213,4 +214,75 @@ bool CLogicSocket::_HandleLogIn(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHea
 {
     LOG_INFO << "执行了CLogicSocket::_HandleLogIn()!" ;
     return true;
+}
+
+
+//处理心跳包的各种业务逻辑
+bool CLogicSocket::_HandlePing(lp_connection_t pConn,LPSTRUC_MSG_HEADER pMsgHeader,char *pPkgBody,unsigned short iBodyLength)
+{
+    LOG_INFO << "执行了CLogicSocket::_HandlePing()!" ;
+    //（1）首先判断心跳包的合法性
+    if(iBodyLength != 0)   //有包体则认为是  非法包
+    {
+        
+        return false;
+    }
+
+    muduo::MutexLockGuard lock(pConn->logicPorcMutex);
+    pConn->lastPingTime = time(NULL);  //更新心跳包的时间
+
+    //服务器给客户端返回一个只有包头的数据包
+    SendNoBodyPkgToClient(pMsgHeader, _CMD_PING);
+
+
+
+    LOG_INFO << "成功发送心跳包并返回";
+
+    return true;
+}
+
+void CLogicSocket::SendNoBodyPkgToClient(LPSTRUC_MSG_HEADER pMsgHeader, unsigned short iMsgCode)
+{
+    CMemory *p_memory = CMemory::GetInstance();
+
+    char *p_sendbuf = (char *)p_memory->AllocMemory(m_iLenMsgHeader + m_iLenPkgHeader, false);
+    char *p_tmpbuf = p_sendbuf;
+    //加入消息头，内含连接的指针，连接的序列号
+    memcpy(p_tmpbuf, pMsgHeader, m_iLenMsgHeader);
+    p_tmpbuf += m_iLenMsgHeader;
+
+    //包头,内含消息码，包体长度，crc校验值
+    LPCOMM_PKG_HEADER pKgHeader = (LPCOMM_PKG_HEADER)p_tmpbuf;
+    pKgHeader->msgCode = htons(iMsgCode);
+    pKgHeader->pkgLen = htons(m_iLenPkgHeader);
+    pKgHeader->crc32 = 0;
+    msgSend(p_sendbuf);
+
+}
+
+
+//心跳包检测时间到，该去检测心跳包是否超时的事宜，本函数是子类函数，实现具体的判断动作
+void CLogicSocket::procPingTimeOutChecking(LPSTRUC_MSG_HEADER tmpmsg,time_t cur_time)
+{
+    CMemory *p_memory = CMemory::GetInstance();
+
+    if(tmpmsg->iCurrsequence == tmpmsg->pConn->iCurrsequence) //此连接没断
+    {
+        lp_connection_t p_Conn = tmpmsg->pConn;
+
+        //超时踢的判断标准就是 每次检查的时间间隔*3，超过这个时间没发送心跳包，就踢【大家可以根据实际情况自由设定】
+        if( (cur_time - p_Conn->lastPingTime ) > (m_iWaitTime * 3 + 10) )
+        {
+            //踢出去【如果此时此刻该用户正好断线，则这个socket可能立即被后续上来的连接复用  如果真有人这么倒霉，赶上这个点了，那么可能错踢，错踢就错踢】            
+            LOG_INFO << "时间到不发心跳包，踢出去!";   //感觉OK
+            zdClosesocketProc(p_Conn); 
+        }   
+             
+        p_memory->FreeMemory(tmpmsg);//内存要释放
+    }
+    else //此连接断了
+    {
+        p_memory->FreeMemory(tmpmsg);//内存要释放
+    }
+    return;
 }

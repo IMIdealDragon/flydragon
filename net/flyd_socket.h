@@ -16,6 +16,9 @@
 #include <atomic>
 #include <list>
 #include <map>
+#include <memory>
+#include <functional>
+#include <boost/circular_buffer.hpp>
 #include "../logging/Mutex.h"
 #include "../logging/Atomic.h"
 #include "../_include/flyd_comm.h"
@@ -44,12 +47,13 @@ struct flyd_connection_s
 {
     flyd_connection_s();
     virtual ~flyd_connection_s();
-    void GetOneToUse();
+    void GetOneToUse();   //
     void PutOneToFree();
 
     int                       fd;             //套接字句柄socket
-    lp_listening_t            listening;      //如果这个链接被分配给了一个监听套接字，那么这个里边就指向监听套接字对应的那个lpngx_listening_t的内存首地址
+    lp_listening_t            listening;      //如果这个链接被分配给了一个监听套接字，那么这个里边就指向监听套接字对应的那个lp_listening_t的内存首地址
 
+    //CSocekt*                  csocket_;
     //------------------------------------
     unsigned                  instance:1;     //【位域】失效标志位：0：有效，1：失效【这个是官方nginx提供，到底有什么用，ngx_epoll_process_events()中详解】
     uint64_t                  iCurrsequence;  //我引入的一个序号，每次分配出去时+1，此法也有可能在一定程度上检测错包废包，具体怎么用，用到了再说
@@ -98,7 +102,6 @@ struct flyd_connection_s
     uint64_t                    FloodkickLastTime;  //Flood攻击上次收到包的时间
     int                         FloodAttackCount;  //Flood攻击在该时间内收到包的次数统计
     muduo::AtomicInt32          iSendCount;     //发送队列中有的数据条目数，若client只发不收，则可能造成此数过大，依据此数做出踢出处理
-
 
 };
 
@@ -247,6 +250,35 @@ private:
     std::multimap<time_t, LPSTRUC_MSG_HEADER>     m_timerQueuemap; //时间队列
     size_t                         m_cur_size_;          //时间队列的大小
     time_t                         m_timer_value_;       //当前计数队列头部时间
+
+    //时间轮相关变量
+    // typedef std::weak_ptr<flyd_connection_s> WeakTcpConnectionPtr;
+    // typedef std::shared_ptr<flyd_connection_s> TcpConnectionPtr;
+    // //嵌套类是独立的
+    // struct Entry
+    // {
+    //     explicit Entry(const WeakTcpConnectionPtr& weakConn)
+    //         : weakConn_(weakConn)
+    //         {
+
+    //         }
+        
+    //     ~Entry()
+    //     {
+    //         TcpConnectionPtr conn = weakConn_.lock();//返回shared_ptr
+    //         if(conn)
+    //         {
+                
+    //              //flyd_close_connection(*conn);
+    //         }
+    //     }
+       // lp_connection_t conn = 
+
+
+    //    WeakTcpConnectionPtr weakConn_;
+    // };
+
+    // typedef std::shared_ptr<Entry> EntryPtr;
 };
 
 

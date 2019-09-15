@@ -39,7 +39,7 @@ flyd_connection_s::~flyd_connection_s()//析构函数
    // pthread_mutex_destroy(&logicPorcMutex);    //互斥量释放
 }
 
-//分配出去一个连接的时候初始化一些内容,原来内容放在 ngx_get_connection()里，现在放在这里
+//新建一个连接的时候使用，主要是初始化连接相关的变量，其实正常功能应该放在构造函数里面
 void flyd_connection_s::GetOneToUse()
 {
     ++iCurrsequence;
@@ -58,7 +58,7 @@ void flyd_connection_s::GetOneToUse()
     lastPingTime    = time(NULL);                    //如果有数据发送过来也更新这个时间
 }
 
-//回收回来一个连接的时候做一些事
+//关闭一个连接应该做的事情，其实应该是析构函数做的
 void flyd_connection_s::PutOneToFree()
 {
     ++iCurrsequence;   
